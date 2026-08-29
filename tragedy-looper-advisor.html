@@ -1267,6 +1267,7 @@ function loadFromSlot(n){
   G.tL=s.tL; G.dL=s.dL;
   G.mainPlot=s.mainPlot; G.subPlots=[...s.subPlots];
   G.chars=JSON.parse(JSON.stringify(s.chars));
+  G.chars.forEach(c=>{ if(!c.forbiddenLocs) c.forbiddenLocs=[]; }); // migrate old saves
   G.incidents=JSON.parse(JSON.stringify(s.incidents));
   G.scriptName=s.name;
   G.loc={City:0,Shrine:0,Hospital:0,School:0};
