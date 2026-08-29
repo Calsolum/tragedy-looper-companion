@@ -885,57 +885,101 @@ const PLOTS_NT = [
 ];
 
 const PLOTS_ZM = [
-  {id:'hp_zm',set:'fs',type:'main',name:'Heinous Plot',roles:['Key Person','Cultist'],
-   wcs:[{id:'kp_death',label:'Key Person Dies',desc:'Key Person death = immediate Protagonist loss.',type:'key_person_death',timing:'immediate'}],
-   desc:'(Z-Man) Key Person death = immediate loss.'},
-  {id:'pm_fs_zm',set:'fs',type:'main',name:'Premeditated Murder',roles:['Key Person','Brain','Murderer'],
-   wcs:[{id:'kp_death',label:'Key Person Dies',desc:'Key Person death = immediate Protagonist loss.',type:'key_person_death',timing:'immediate'}],
-   desc:'(Z-Man) Key Person must survive.'},
-  {id:'la_zm',set:'fs',type:'main',name:'Light of the Avenger',roles:['Brain'],
-   wcs:[{id:'brain_loc_i',label:'Brain\'s Location has 2+ Intrigue at Loop End',
-    desc:'At Loop End, if the Brain\'s current location has 2+ Intrigue, the Protagonists lose.',
-    type:'char_loc_intrigue',role:'Brain',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Flood the Brain\'s current location with 2+ Intrigue.'},
-  {id:'sotr_zm',set:'fs',type:'sub',name:'Shadow of the Ripper',roles:['Serial Killer'],
-   wcs:[{id:'sk2',label:'Serial Killer Claims 2+ Victims at Loop End',
-    desc:'At Loop End, if the Serial Killer killed 2+ Characters this loop, the Protagonists lose.',
-    type:'kill_count',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Serial Killer must claim 2 victims.'},
-  {id:'ahs_zm',set:'fs',type:'sub',name:'A Hideous Script',roles:['Conspiracy Theorist'],
-   wcs:[{id:'ct_i_zm',label:'CT has 2+ Personal Intrigue at Loop End',
-    desc:'At Loop End, if the Conspiracy Theorist has 2+ Intrigue on them, the Protagonists lose.',
-    type:'char_intrigue',role:'Conspiracy Theorist',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Stack 2+ personal Intrigue on the Conspiracy Theorist.'},
-  {id:'mp_bt_zm',set:'bt',type:'main',name:'Murder Plan',roles:['Key Person','Killer','Brain'],
-   wcs:[{id:'kp_death',label:'Key Person Dies',desc:'Key Person death = immediate loss.',type:'key_person_death',timing:'immediate'}],
-   desc:'(Z-Man) Key Person death = immediate loss.'},
-  {id:'tsi_zm',set:'bt',type:'main',name:'The Sealed Item',roles:['Witch'],
-   wcs:[{id:'shrine_i',label:'2+ Intrigue on Shrine at Loop End',desc:'Shrine at 2+ Intrigue = loss.',type:'loc_intrigue',location:'Shrine',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Flood the Shrine with Intrigue.'},
-  {id:'swm_zm',set:'bt',type:'main',name:'Sign with Me',roles:['Witch'],
-   wcs:[{id:'witch_i_zm',label:'Witch has 3+ Personal Intrigue at Loop End',
-    desc:'At Loop End, if Witch has 3+ Intrigue on them, Protagonists lose.',
-    type:'char_intrigue',role:'Witch',threshold:3,timing:'loop_end'}],
-   desc:'(Z-Man) Stack 3+ personal Intrigue on the Witch.'},
-  {id:'gtba_zm',set:'bt',type:'main',name:'Giant Time Bomb A',roles:['Witch'],
-   wcs:[{id:'ws_i_zm',label:'Witch\'s Starting Location has 2+ Intrigue',
-    type:'char_start_loc_intrigue',role:'Witch',threshold:2,timing:'loop_end',
-    desc:'At Loop End, if Witch\'s starting location has 2+ Intrigue, Protagonists lose.'}],
-   desc:'(Z-Man) Flood the Witch\'s starting location.'},
-  {id:'gtbb_zm',set:'bt',type:'main',name:'Giant Time Bomb B',roles:['Witch'],
-   wcs:[{id:'dc2_zm',label:'2+ Characters Die This Loop',desc:'At Loop End, 2+ deaths = loss.',type:'death_count',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Two or more Characters must die this loop.'},
-  {id:'cof_zm',set:'bt',type:'sub',name:'Circle of Friends',roles:['Friend','Friend'],wcs:[],desc:'(Z-Man) Friend death = loss.'},
-  {id:'aur_bt_zm',set:'bt',type:'sub',name:'An Unsettling Rumour',roles:['Conspiracy Theorist'],wcs:[],desc:'(Z-Man) Add 1 Intrigue to Location once per loop.'},
-  {id:'ala_zm',set:'bt',type:'sub',name:'A Love Affair',roles:['Lover','Loved One'],wcs:[],desc:'(Z-Man) Lover/Loved One death causes Unease spiral.'},
-  {id:'hf_zm',set:'bt',type:'sub',name:'The Hidden Freak',roles:['Serial Killer'],
-   wcs:[{id:'sk1',label:'Serial Killer Claims 1+ Victim',desc:'At Loop End, 1+ kill = loss.',type:'kill_count',threshold:1,timing:'loop_end'}],
-   desc:'(Z-Man) Serial Killer must claim at least 1 victim.'},
-  {id:'uf_zm',set:'bt',type:'sub',name:'Unknown Factor X',roles:['Factor','Conspiracy Theorist'],
-   wcs:[{id:'fl_i_zm',label:'Factor\'s Location has 2+ Intrigue',
-    desc:'At Loop End, if Factor\'s location has 2+ Intrigue, Protagonists lose.',
-    type:'char_loc_intrigue',role:'Factor',threshold:2,timing:'loop_end'}],
-   desc:'(Z-Man) Flood the Factor\'s location.'},
+  // First Steps — Main Plots
+  {id:'apt_zm',set:'fs',type:'main',name:'A Place to Protect',
+   roles:['Key Person','Cultist'],
+   wcs:[{id:'school_i_zm',label:'2+ Intrigue on School at Loop End',
+    desc:'At Loop End, if the School has 2 or more Intrigue, the Protagonists lose.',
+    type:'loc_intrigue',location:'School',threshold:2,timing:'loop_end'}],
+   desc:'(Z-Man) Flood the School with 2+ Intrigue by loop end. Cultist can ignore Forbid Intrigue.'},
+  {id:'mp_fs_zm',set:'fs',type:'main',name:'Murder Plan',
+   roles:['Key Person','Brain','Killer'],
+   wcs:[{id:'kp_death',label:'Key Person Dies',
+    desc:'If the Key Person dies for any reason, the Protagonists lose immediately.',
+    type:'key_person_death',timing:'immediate'}],
+   desc:'(Z-Man) Key Person death ends loop immediately. Killer can kill Key Person (2+ Intrigue nearby) or Protagonists (4+ Intrigue on Killer).'},
+  {id:'la_zm',set:'fs',type:'main',name:'Light of the Avenger',
+   roles:['Brain'],
+   wcs:[{id:'brain_start_i_zm',label:'2+ Intrigue on Brain\'s Starting Location at Loop End',
+    desc:'At Loop End, if the Brain\'s starting Location has 2+ Intrigue, the Protagonists lose.',
+    type:'char_start_loc_intrigue',role:'Brain',threshold:2,timing:'loop_end'}],
+   desc:'(Z-Man) Flood the Brain\'s starting location with 2+ Intrigue by loop end.'},
+  // First Steps — Subplots
+  {id:'sotr_zm',set:'fs',type:'sub',name:'Shadow of the Ripper',
+   roles:['Conspiracy Theorist','Serial Killer'],
+   wcs:[],
+   desc:'(Z-Man) Adds Serial Killer and Conspiracy Theorist. Serial Killer: if exactly 1 other living Character at same location at Day End, that Character dies.'},
+  {id:'aur_fs_zm',set:'fs',type:'sub',name:'An Unsettling Rumour',
+   roles:['Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Z-Man) [Optional] Once per loop, at Mastermind Ability step, you may add 1 Intrigue to a Location of your choice.'},
+  {id:'ahs_zm',set:'fs',type:'sub',name:'A Hideous Script',
+   roles:['Conspiracy Theorist','Friend','Curmudgeon'],
+   wcs:[],
+   desc:'(Z-Man) Adds Friend, Conspiracy Theorist, and 0–2 Curmudgeons. Friend death triggers Protagonist loss at loop end.'},
+  // Basic Tragedy — Main Plots
+  {id:'mp_bt_zm',set:'bt',type:'main',name:'Murder Plan',
+   roles:['Key Person','Brain','Killer'],
+   wcs:[{id:'kp_death',label:'Key Person Dies',
+    desc:'If the Key Person dies for any reason, the Protagonists lose immediately.',
+    type:'key_person_death',timing:'immediate'}],
+   desc:'(Z-Man) Key Person death ends loop immediately. Killer kills Key Person (2+ Intrigue) or Protagonists (4+ Intrigue).'},
+  {id:'tsi_zm',set:'bt',type:'main',name:'The Sealed Item',
+   roles:['Brain','Cultist'],
+   wcs:[{id:'shrine_i',label:'2+ Intrigue on Shrine at Loop End',
+    desc:'At Loop End, if the Shrine has 2+ Intrigue, the Protagonists lose.',
+    type:'loc_intrigue',location:'Shrine',threshold:2,timing:'loop_end'}],
+   desc:'(Z-Man) Flood the Shrine with 2+ Intrigue. Brain places Intrigue; Cultist ignores Forbid Intrigue.'},
+  {id:'swm_zm',set:'bt',type:'main',name:'Sign with Me!',
+   roles:['Key Person (must be a Girl)'],
+   wcs:[{id:'kp_i',label:'2+ Intrigue on Key Person at Loop End',
+    desc:'At Loop End, if the Key Person (a girl) has 2+ Intrigue on them, the Protagonists lose.',
+    type:'char_intrigue',role:'Key Person',threshold:2,timing:'loop_end'}],
+   desc:'(Z-Man) Key Person must be a Girl. Stack 2+ Intrigue directly on her by loop end.'},
+  {id:'ctf_zm',set:'bt',type:'main',name:'Change of Future',
+   roles:['Cultist','Time Traveler'],
+   wcs:[{id:'butterfly_fired',label:'Butterfly Effect Incident Fired This Loop',
+    desc:'At Loop End, if the Butterfly Effect Incident happened this loop, the Protagonists lose.',
+    type:'incident_fired_type',incidentType:'Butterfly Effect',timing:'loop_end'},
+    {id:'tt_gw',label:'Time Traveler Has ≤2 Goodwill at Loop End',
+    desc:'[Optional] At Loop End, if the Time Traveler has 2 or fewer Goodwill tokens, you may declare a Protagonist loss.',
+    type:'char_max_goodwill',role:'Time Traveler',threshold:2,timing:'loop_end',optional:true}],
+   desc:'(Z-Man) Trigger the Butterfly Effect incident. Also: Time Traveler cannot die and ignores Forbid Goodwill.'},
+  {id:'gtb_zm',set:'bt',type:'main',name:'Giant Time Bomb',
+   roles:['Witch'],
+   wcs:[{id:'witch_start_i_zm',label:'2+ Intrigue on Witch\'s Starting Location at Loop End',
+    desc:'At Loop End, if the Witch\'s starting Location has 2+ Intrigue, the Protagonists lose.',
+    type:'char_start_loc_intrigue',role:'Witch',threshold:2,timing:'loop_end'}],
+   desc:'(Z-Man) Witch has Mandatory Goodwill Refusal. Flood her starting location with 2+ Intrigue.'},
+  // Basic Tragedy — Subplots
+  {id:'cof_zm',set:'bt',type:'sub',name:'Circle of Friends',
+   roles:['Friend','Friend','Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Z-Man) 2 Friends + Conspiracy Theorist. Any Friend death = Protagonist loss at loop end. Friend role revealed on death.'},
+  {id:'aur_bt_zm',set:'bt',type:'sub',name:'An Unsettling Rumour',
+   roles:['Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Z-Man) [Optional] Once per loop, you may add 1 Intrigue to a Location of your choice.'},
+  {id:'pv_zm',set:'bt',type:'sub',name:'Paranoia Virus',
+   roles:['Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Z-Man) All Persons become Serial Killers while they have 3+ Paranoia. Plot Rule active throughout loop.'},
+  {id:'tof_zm',set:'bt',type:'sub',name:'Threads of Fate',
+   roles:[],
+   wcs:[],
+   desc:'(Z-Man) No secret roles. At Loop Start: place 2 Paranoia on each Character who had Goodwill at end of previous loop.'},
+  {id:'hf_zm',set:'bt',type:'sub',name:'The Hidden Freak',
+   roles:['Friend','Serial Killer'],
+   wcs:[],
+   desc:'(Z-Man) 1 Friend + Serial Killer. Friend death = Protagonist loss at loop end.'},
+  {id:'ala_zm',set:'bt',type:'sub',name:'A Love Affair',
+   roles:['Lover','Loved One'],
+   wcs:[],
+   desc:'(Z-Man) Loved One dies → Lover gets 6 Paranoia. Lover dies → Loved One gets 6 Paranoia. Loved One (3+ Paranoia, 1+ Intrigue) can kill Protagonists.'},
+  {id:'uf_zm',set:'bt',type:'sub',name:'Unknown Factor X',
+   roles:['Factor'],
+   wcs:[],
+   desc:'(Z-Man) Factor gains CT abilities if School has 2+ Intrigue; gains Key Person abilities if City has 2+ Intrigue.'},
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -1225,7 +1269,7 @@ const PRELOADED_SCRIPTS = [
 const LOCS=['City','Shrine','Hospital','School'];
 const LM={City:3,Shrine:2,Hospital:2,School:2};
 const INCIDENTS_NT=['Homicide','Suicide','Faraway Murder','Transfer Friendship','Missing Person','Hospital Horror','Increasing Unease','Butterfly Effect','Foul Evil'];
-const INCIDENTS_ZM=['Murder','Suicide','Spreading','Serial Murder','Foul Evil','Missing Person','Farce','Hospital Incident','Faraway Murder'];
+const INCIDENTS_ZM=['Murder','Suicide','Spreading','Increasing Unease','Foul Evil','Missing Person','Butterfly Effect','Hospital Incident','Faraway Murder'];
 
 const G={
   version:'nt',
@@ -1760,7 +1804,7 @@ function addC(){
 function delC(id){G.chars=G.chars.filter(c=>c.id!==id);renderChars();}
 function uc(id,k,v){const c=G.chars.find(c=>c.id===id);if(c)c[k]=v;}
 function getRoles(){
-  const base=['None','Key Person','Key Person (must be a Girl)','Brain','Murderer','Witch','Serial Killer',
+  const base=['None','Key Person','Key Person (must be a Girl)','Brain','Murderer','Killer','Witch','Serial Killer',
     'Time Traveler','Cultist','Conspiracy Theorist','Factor','Friend','Lover','Loved One','Curmudgeon','Henchman','Person'];
   const req=[];
   getActivePlots().forEach(p=>p.roles.forEach(r=>{const c=r.replace(' (must be a Girl)','');if(!req.includes(c))req.push(c);}));
@@ -3840,8 +3884,8 @@ function openNextDayModal(){
     }
   });
 
-  // 2. Check Murderer — Key Person kill
-  const murderers=G.chars.filter(c=>!c.dead&&c.role==='Murderer');
+  // 2. Check Murderer — Key Person kill (Z-Man edition calls this role "Killer")
+  const murderers=G.chars.filter(c=>!c.dead&&(c.role==='Murderer'||c.role==='Killer'));
   const keyPerson=G.chars.find(c=>!c.dead&&(c.role==='Key Person'||c.role==='Key Person (must be a Girl)'));
   murderers.forEach(m=>{
     if(keyPerson&&keyPerson.loc===m.loc&&(keyPerson.intr||0)>=2){
