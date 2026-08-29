@@ -1264,6 +1264,208 @@ const PRELOADED_SCRIPTS = [
 ];
 
 // ══════════════════════════════════════════════════════════════
+// PRELOADED SCRIPTS (Z-MAN) — from the Z-Man Games Mastermind's Handbook
+// Scripts 1, 7, 9, 10 share the same creator/name/mechanics as their
+// New Tragedies counterparts (confirmed against both rulebooks) and are
+// adapted directly. Scripts 2-6 have no NT equivalent — their roles, plots
+// and win conditions come straight from the Handbook's Victory Conditions
+// boxes, but the Handbook's script pages don't include a setup table, so
+// exact starting locations and incident days aren't printed anywhere in
+// it. Those fields are best-effort placeholders — each such script's
+// `note` says so explicitly. Verify against the physical component/script
+// card before relying on them in play.
+// ══════════════════════════════════════════════════════════════
+const PRELOADED_SCRIPTS_ZM = [
+  {
+    num:1, name:'The First Script', creator:'BakaFire',
+    set:'First Steps', loops:'3', days:'3', difficulty:1,
+    mainPlot:'mp_fs_zm', subPlots:[],
+    note:'First-time play script. Aim to kill the Girl Student (Key Person). Serial Killer, suicide, and Killer are all options.',
+    chars:[
+      {name:'Girl Student',role:'Key Person',loc:'School',maxUnease:3},
+      {name:'Shrine Maiden',role:'Serial Killer',loc:'Shrine',maxUnease:2},
+      {name:'Pop Idol',role:'Conspiracy Theorist',loc:'School',maxUnease:2},
+      {name:'Office Worker',role:'Killer',loc:'City',maxUnease:3},
+      {name:'Doctor',role:'Brain',loc:'Hospital',maxUnease:3},
+      {name:'Boy Student',role:'Person',loc:'School',maxUnease:2},
+    ],
+    incidents:[
+      {day:3,type:'Suicide',culprit:'Girl Student'}
+    ]
+  },
+  {
+    num:2, name:'Prevailing Secrecy', creator:'BakaFire',
+    set:'First Steps', loops:'4', days:'5', difficulty:2,
+    mainPlot:'apt_zm', subPlots:['aur_fs_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations, incident days, and the exact subplot before play. Win via 2 Intrigue on the School (A Place to Protect), or kill the Key Person (Doctor) with the Hospital Incident or a Faraway Murder around day 5. Build Paranoia on the Shrine Maiden (Conspiracy Theorist) to set up Hospital Incident.',
+    chars:[
+      {name:'Doctor',role:'Key Person',loc:'Hospital',maxUnease:3},
+      {name:'Shrine Maiden',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+      {name:'Girl Student',role:'Person',loc:'School',maxUnease:3},
+      {name:'Boy Student',role:'Person',loc:'School',maxUnease:3},
+    ],
+    incidents:[
+      {day:3,type:'Hospital Incident',culprit:'Shrine Maiden'},
+      {day:5,type:'Faraway Murder',culprit:'Shrine Maiden'}
+    ]
+  },
+  {
+    num:3, name:'Young Women\'s Battlefield', creator:'Gayusu',
+    set:'Basic Tragedy', loops:'4', days:'5', difficulty:1,
+    mainPlot:'swm_zm', subPlots:['hf_zm','ala_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Win via 2 Intrigue on the Shrine Maiden (Key Person), her death via the Serial Killer, killing the Friend (Girl Student), or the Loved One\'s ability. Keep the Friend unrevealed as long as possible.',
+    chars:[
+      {name:'Shrine Maiden',role:'Key Person (must be a Girl)',loc:'Shrine',maxUnease:3},
+      {name:'Girl Student',role:'Friend',loc:'School',maxUnease:3},
+      {name:'Pop Idol',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Boy Student',role:'Lover',loc:'School',maxUnease:3},
+      {name:'Office Worker',role:'Loved One',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Increasing Unease',culprit:'Pop Idol'},
+      {day:4,type:'Foul Evil',culprit:'Office Worker'}
+    ]
+  },
+  {
+    num:4, name:'Lesser of Two Evils', creator:'GEnd',
+    set:'Basic Tragedy', loops:'4', days:'5', difficulty:1,
+    mainPlot:'tsi_zm', subPlots:['hf_zm','uf_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Win via 2 Intrigue on the Shrine, killing the Friend (Shrine Maiden) via the Serial Killer, or killing the Factor with 2+ Intrigue on the City. Use the Brain\'s ability freely from turn 1; avoid the Cultist unless necessary.',
+    chars:[
+      {name:'A.I.',role:'Brain',loc:'City',maxUnease:3},
+      {name:'Shrine Maiden',role:'Friend',loc:'Shrine',maxUnease:3},
+      {name:'Rich Man\'s Daughter',role:'Factor',loc:'City',maxUnease:3},
+      {name:'Journalist',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Cultist',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Missing Person',culprit:'Rich Man\'s Daughter'},
+      {day:4,type:'Increasing Unease',culprit:'Journalist'}
+    ]
+  },
+  {
+    num:5, name:'The Secret That Was Kept', creator:'Bakafire',
+    set:'Basic Tragedy', loops:'4', days:'5', difficulty:2,
+    mainPlot:'gtb_zm', subPlots:['cof_zm','tof_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Witch\'s starting location is the School. Win via 2+ Intrigue on the School, killing a Friend (Office Worker) via Hospital Incident, or killing the Protagonists via Hospital Incident. Push for the Suicide on day 2; use Forbid Goodwill on the Witch until then. Keep the second Friend (Alien) hidden for Final Guess.',
+    chars:[
+      {name:'Alien',role:'Witch',loc:'School',maxUnease:3},
+      {name:'Office Worker',role:'Friend',loc:'City',maxUnease:3},
+      {name:'Girl Student',role:'Friend',loc:'School',maxUnease:3},
+      {name:'Pop Idol',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Suicide',culprit:'Alien'},
+      {day:4,type:'Hospital Incident',culprit:'Office Worker'}
+    ]
+  },
+  {
+    num:6, name:'The Future of the Gods', creator:'Nightly Moonfire group',
+    set:'Basic Tragedy', loops:'4', days:'6', difficulty:3,
+    mainPlot:'ctf_zm', subPlots:['hf_zm','ala_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Uses the special "Godly Being" character (Pop Idol\'s fanatic, the Police Officer). Win via Butterfly Effect (Change of Future), ending a loop with 2 or less Goodwill on the Boy Student (Time Traveler), killing the Friend (Nurse) via Serial Killer, or the Loved One\'s ability. The Godly Being and the Love Affair subplot only come into play from loop 3 on — keep both hidden until then.',
+    chars:[
+      {name:'Boy Student',role:'Time Traveler',loc:'City',maxUnease:3},
+      {name:'Pop Idol',role:'Cultist',loc:'City',maxUnease:3},
+      {name:'Nurse',role:'Friend',loc:'Hospital',maxUnease:3},
+      {name:'Police Officer',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Doctor',role:'Lover',loc:'Hospital',maxUnease:3},
+      {name:'Girl Student',role:'Loved One',loc:'School',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Butterfly Effect',culprit:'Pop Idol'},
+      {day:5,type:'Increasing Unease',culprit:'Boy Student'}
+    ]
+  },
+  {
+    num:7, name:'Mirror Passcode', creator:'M. Hydromel',
+    set:'Basic Tragedy', loops:'4', days:'6', difficulty:3,
+    mainPlot:'swm_zm', subPlots:['uf_zm','aur_bt_zm'],
+    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Uses the tilting "Mystery Boy" character. Win via 2 Intrigue on the Girl Student (Key Person), her death, killing the Factor (Rich Man\'s Daughter) with 2+ Intrigue on the City, or killing the Protagonists — all primarily via Serial Killer / Hospital Incident / Murder Incident. Even if all other roles are revealed, the Protagonists should still not know which girl is the Key Person.',
+    chars:[
+      {name:'Girl Student',role:'Key Person (must be a Girl)',loc:'School',maxUnease:3},
+      {name:'Rich Man\'s Daughter',role:'Factor',loc:'City',maxUnease:3},
+      {name:'Mystery Boy',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Shrine Maiden',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Murder',culprit:'Mystery Boy'},
+      {day:4,type:'Hospital Incident',culprit:'Rich Man\'s Daughter'}
+    ]
+  },
+  {
+    num:8, name:'Those with Antibodies', creator:'Satoshi Sawamura',
+    set:'Basic Tragedy', loops:'5', days:'4', difficulty:4,
+    mainPlot:'ctf_zm', subPlots:['hf_zm','pv_zm'],
+    note:'Win in every loop via Butterfly Effect. Protagonists cannot win a loop — they must aim for Final Guess. Use Threads of Fate / Butterfly Effect from Day 1.',
+    chars:[
+      {name:'Rich Student',role:'Cultist',loc:'School',maxUnease:1},
+      {name:'Journalist',role:'Time Traveler',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Person',loc:'City',maxUnease:3},
+      {name:'Forensic Specialist',role:'Friend',loc:'City',maxUnease:3},
+      {name:'Class Rep',role:'Conspiracy Theorist',loc:'School',maxUnease:2},
+      {name:'Doctor',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Soldier',role:'Serial Killer',loc:'Shrine',maxUnease:3},
+      {name:'Henchman',role:'Person',loc:'School',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Butterfly Effect',culprit:'Rich Student'},
+      {day:2,type:'Spreading',culprit:'Henchman'},
+      {day:3,type:'Increasing Unease',culprit:'Class Rep'},
+      {day:4,type:'Foul Evil',culprit:'Office Worker'}
+    ]
+  },
+  {
+    num:9, name:'Prologue', creator:'BakaFire',
+    set:'Basic Tragedy', loops:'5', days:'7', difficulty:5,
+    mainPlot:'mp_bt_zm', subPlots:['ala_zm','cof_zm'],
+    note:'Extreme script. Key Person is a girl. Two girls are roles using Intrigue. Doctor has Goodwill Refusal. Hospital Incident available. Lovers are culprits who chain-react.',
+    chars:[
+      {name:'Shrine Maiden',role:'Key Person',loc:'Shrine',maxUnease:2},
+      {name:'Rich Student',role:'Killer',loc:'City',maxUnease:1},
+      {name:'Boy Student',role:'Brain',loc:'School',maxUnease:2},
+      {name:'Police Officer',role:'Lover',loc:'City',maxUnease:3},
+      {name:'Girl Student',role:'Loved One',loc:'School',maxUnease:3},
+      {name:'Doctor',role:'Friend',loc:'Hospital',maxUnease:3},
+      {name:'Office Worker',role:'Friend',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Spreading',culprit:'Informant'},
+      {day:5,type:'Hospital Incident',culprit:'Boy Student'},
+      {day:6,type:'Suicide',culprit:'Police Officer'},
+      {day:7,type:'Murder',culprit:'Police Officer'}
+    ]
+  },
+  {
+    num:10, name:'Never Ending Happy & Sad Story', creator:'BF + 3G',
+    set:'Basic Tragedy', loops:'4', days:'6', difficulty:5,
+    mainPlot:'gtb_zm', subPlots:['cof_zm','ala_zm'],
+    note:'Most insane script. Intrigue on Shrine is mandatory. Spread Intrigue on Hospital, girls, Class Rep, Pop Idol, Alien. Use Brain and Conspiracy Theorist from Day 1. Mad Lover is key.',
+    chars:[
+      {name:'Pop Idol',role:'Witch',loc:'City',maxUnease:2},
+      {name:'Class Rep',role:'Loved One',loc:'School',maxUnease:2},
+      {name:'Mystery Boy',role:'Brain',loc:'Shrine',maxUnease:3},
+      {name:'Alien',role:'Lover',loc:'Shrine',maxUnease:3},
+      {name:'Girl Student',role:'Friend',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Conspiracy Theorist',loc:'School',maxUnease:1},
+      {name:'Shrine Maiden',role:'Friend',loc:'Shrine',maxUnease:2},
+      {name:'Doctor',role:'Person',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Butterfly Effect',culprit:'Rich Student'},
+      {day:3,type:'Increasing Unease',culprit:'Class Rep'},
+      {day:4,type:'Foul Evil',culprit:'Mystery Boy'},
+      {day:5,type:'Missing Person',culprit:'Alien'},
+      {day:6,type:'Hospital Incident',culprit:'Doctor'}
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
 // STATE & CONSTANTS
 // ══════════════════════════════════════════════════════════════
 const LOCS=['City','Shrine','Hospital','School'];
@@ -1332,8 +1534,7 @@ function deleteSlot(n){
 }
 
 function loadPreloaded(idx){
-  const s=PRELOADED_SCRIPTS[idx];
-  G.version='nt';
+  const s=getPreloadedScripts()[idx];
   G.tL=parseInt(s.loops.split('/').pop())||4;
   G.dL=s.days;
   G.mainPlot=s.mainPlot;
@@ -1390,6 +1591,7 @@ function updateVerLabels(){
 }
 function getPlots(){return G.version==='nt'?PLOTS_NT:PLOTS_ZM;}
 function getIncidents(){return G.version==='nt'?INCIDENTS_NT:INCIDENTS_ZM;}
+function getPreloadedScripts(){return G.version==='nt'?PRELOADED_SCRIPTS:PRELOADED_SCRIPTS_ZM;}
 function uneaseLabel(){return G.version==='nt'?'Unease':'Paranoia';}
 
 // ── NAVIGATION ──
@@ -1442,20 +1644,15 @@ function renderSavedSlots(){
 
 // ── PRELOADED SCRIPTS ──
 function renderPreloadedList(){
-  const isNT=G.version==='nt';
   const el=document.getElementById('preloaded-list');
-  const secEl=document.getElementById('preloaded-sec');
-  if(!isNT){
-    el.innerHTML='<div style="color:var(--t3);font-size:13px;padding:8px 0">Preloaded scripts are only available for New Tragedies. Switch version to access them.</div>';
-    return;
-  }
   el.innerHTML='';
-  PRELOADED_SCRIPTS.forEach((s,idx)=>{
+  const plots=getPlots();
+  getPreloadedScripts().forEach((s,idx)=>{
     const d=document.createElement('div');
     d.className='script-item';
     const dots=Array.from({length:7},(_,i)=>`<div class="diff-dot${i<s.difficulty?'':' off'}"></div>`).join('');
-    const mainPlot=PLOTS_NT.find(p=>p.id===s.mainPlot);
-    const subPlotNames=(s.subPlots||[]).map(id=>PLOTS_NT.find(p=>p.id===id)?.name||id);
+    const mainPlot=plots.find(p=>p.id===s.mainPlot);
+    const subPlotNames=(s.subPlots||[]).map(id=>plots.find(p=>p.id===id)?.name||id);
     d.innerHTML=`
       <div class="script-num">SCRIPT ${s.num} — ${s.set.toUpperCase()} — ${s.creator}</div>
       <div class="script-title">${s.name}</div>
