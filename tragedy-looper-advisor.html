@@ -3636,22 +3636,33 @@ function _doCardPlay(charId, cardId, card){
 }
 
 // Also allow playing on a location (intrigue only)
-function openLocCardPlayModal(locKey){
-  const modal=document.getElementById('card-play-modal');
-  document.getElementById('cpm-title').textContent='Play on '+locKey;
-  document.getElementById('cpm-subtitle').textContent=`Location intrigue: ${G.loc[locKey]||0}/${LM[locKey]}`;
-  const locCards=[
+function getLocCards(locKey){
+  return [
     {id:'mm_li1a',label:'Intrigue +1',icon:'🔺',tag:'mm',desc:'Add 1 Intrigue to this location.',effect:'loc_i',loc:locKey,delta:1},
     {id:'mm_li2', label:'Intrigue +2',icon:'🔺',tag:'mm',desc:'Add 2 Intrigue to this location (once/loop).',effect:'loc_i',loc:locKey,delta:2,usesPerLoop:1},
     {id:'p_fi_loc',label:'Forbid Intrigue',icon:'🚫',tag:'prot',desc:'Forbid Intrigue on this location today.',effect:'log_only',loc:locKey},
   ];
+}
+function openLocCardPlayModal(locKey){
+  const modal=document.getElementById('card-play-modal');
+  document.getElementById('cpm-title').textContent='Play on '+locKey;
+  document.getElementById('cpm-subtitle').textContent=`Location intrigue: ${G.loc[locKey]||0}/${LM[locKey]} · MM: ${DAY_CARDS.mm}/${DAY_LIMIT} · Prot: ${DAY_CARDS.prot}/${DAY_LIMIT} played today`;
+  const locCards=getLocCards(locKey);
   let html=`<div class="card-grid">`;
   locCards.forEach(card=>{
-    html+=`<div class="card-opt ${card.tag==='mm'?'mm-card':''}" onclick="applyLocCardPlay('${locKey}','${card.id}',${card.delta||0},'${card.tag}','${card.label}')">
+    const side=card.tag==='mm'?'mm':'prot';
+    const used=CARD_USED[card.id]||0;
+    const loopExhausted=card.usesPerLoop===1&&used>=1;
+    const atLimit=DAY_CARDS[side]>=DAY_LIMIT;
+    const dimStyle=(loopExhausted||atLimit)?'opacity:.45;':'';
+    let badge='';
+    if(loopExhausted) badge='<span class="log-tag sys">USED</span>';
+    else if(card.usesPerLoop===1) badge='<span class="log-tag mm">ONCE/LOOP</span>';
+    html+=`<div class="card-opt ${card.tag==='mm'?'mm-card':''}" style="${dimStyle}" onclick="applyLocCardPlay('${locKey}','${card.id}')">
       <div class="card-opt-icon">${card.icon}</div>
       <div class="card-opt-name">${card.label}</div>
       <div class="card-opt-desc">${card.desc}</div>
-    </div>`;
+      ${badge}</div>`;
   });
   html+=`</div><button onclick="document.getElementById('card-play-modal').style.display='none'"
     style="width:100%;margin-top:8px;background:none;border:.5px solid var(--bdr2);border-radius:9px;
@@ -3659,9 +3670,40 @@ function openLocCardPlayModal(locKey){
   document.getElementById('cpm-body').innerHTML=html;
   modal.style.display='flex';
 }
-function applyLocCardPlay(locKey, cardId, delta, tag, label){
-  if(delta) G.loc[locKey]=Math.max(0,Math.min(LM[locKey]+2,(G.loc[locKey]||0)+delta));
-  addLog(tag,'🔺',`<b>${label}</b> → ${locKey}`,`Location intrigue now ${G.loc[locKey]||0}/${LM[locKey]}`);
+function applyLocCardPlay(locKey, cardId){
+  const card=getLocCards(locKey).find(cd=>cd.id===cardId); if(!card) return;
+
+  const side=card.tag==='mm'?'mm':'prot';
+  const dayCount=DAY_CARDS[side];
+  const overDayLimit=dayCount>=DAY_LIMIT;
+
+  const used=CARD_USED[cardId]||0;
+  const isOncePer=card.usesPerLoop===1;
+  const loopExhausted=isOncePer&&used>=1;
+
+  if(overDayLimit){
+    const sideLabel=side==='mm'?'Mastermind':'Protagonists';
+    showDayLimitWarning(sideLabel, dayCount, card, ()=>{
+      if(loopExhausted) showOncPerLoopWarning(card, ()=>_doLocCardPlay(locKey, cardId, card));
+      else _doLocCardPlay(locKey, cardId, card);
+    });
+    return;
+  }
+
+  if(loopExhausted){
+    showOncPerLoopWarning(card, ()=>_doLocCardPlay(locKey, cardId, card));
+    return;
+  }
+
+  _doLocCardPlay(locKey, cardId, card);
+}
+function _doLocCardPlay(locKey, cardId, card){
+  CARD_USED[cardId]=(CARD_USED[cardId]||0)+1;
+  const side=card.tag==='mm'?'mm':'prot';
+  DAY_CARDS[side]=(DAY_CARDS[side]||0)+1;
+
+  if(card.delta) G.loc[locKey]=Math.max(0,Math.min(LM[locKey]+2,(G.loc[locKey]||0)+card.delta));
+  addLog(card.tag,'🔺',`<b>${card.label}</b> → ${locKey}`,`Location intrigue now ${G.loc[locKey]||0}/${LM[locKey]}`);
   document.getElementById('card-play-modal').style.display='none';
   renderBoard();
 }
