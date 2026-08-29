@@ -739,6 +739,7 @@ option{background:var(--bg2)}
   </div>
   <div class="scrl" id="board-container" style="padding:12px 12px 80px"></div>
   <div style="position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:.5px solid var(--bdr);padding:10px 15px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-outline" id="reveal-cards-btn" style="padding:11px;flex:1;min-width:150px" onclick="openRevealModal()">🂠 Reveal Cards</button>
     <button class="btn" style="padding:11px;flex:1;min-width:120px" onclick="openNextDayModal()">Next Day →</button>
     <button class="btn-outline" style="padding:11px;flex:1;min-width:100px" onclick="calcAdvice()">Advice</button>
     <button class="btn-outline" style="padding:11px;flex:0 0 auto;white-space:nowrap" onclick="go('sg')">📜 Log</button>
@@ -2442,6 +2443,7 @@ function renderBoard(){
           min-width:14px;text-align:center">${intrigue}</span>
         <button class="tok-btn plus" onclick="bAdjLoc('${loc.key}',1)">+</button>
         <button class="card-play-btn" onclick="openLocCardPlayModal('${loc.key}')" title="Play card on location" style="margin-left:auto">🃏</button>
+        ${pendingCountFor('loc',loc.key)?`<span class="log-tag sys" title="Face-down cards awaiting reveal">🂠${pendingCountFor('loc',loc.key)}</span>`:''}
       </div>`;
 
     const chars=byLoc[loc.key]||[];
@@ -2499,6 +2501,7 @@ function renderBoard(){
               }).join('')}
             </select>`:''}
             <button class="card-play-btn" onclick="openCardPlayModal(${c.id})" title="Play a card on this character">🃏</button>
+            ${pendingCountFor('char',c.id)?`<span class="log-tag sys" title="Face-down cards awaiting reveal">🂠${pendingCountFor('char',c.id)}</span>`:''}
             ${CHAR_PORTRAITS[c.name]?`<button class="portrait-btn" onclick="openPortraitModal(${JSON.stringify(c.name)},${JSON.stringify(roleDisplay||'Person')})" title="View character portrait">🖼</button>`:''}
             ${!c.dead&&(GW_ABILITIES[c.name]||[]).length>0?`<button class="gw-btn${(c.gw||0)>=(GW_ABILITIES[c.name][0].gwNeeded)?'':' gw-btn-low'}"
               onclick="openGWModal(${c.id})" title="Use Goodwill Ability">
@@ -2588,6 +2591,14 @@ function renderBoard(){
   }
 
   el.innerHTML=html;
+
+  const revealBtn=document.getElementById('reveal-cards-btn');
+  if(revealBtn){
+    const n=PENDING_CARDS.length;
+    revealBtn.textContent=n?`🂠 Reveal Cards (${n})`:'🂠 Reveal Cards';
+    revealBtn.style.opacity=n?'1':'.45';
+    revealBtn.style.pointerEvents=n?'auto':'none';
+  }
 }
 
 // ── GOODWILL ABILITY SYSTEM ──
@@ -3381,7 +3392,10 @@ function cardClearDay(){
 }
 
 // ── PENDING CARDS (facedown, not yet resolved) ──
-// Each entry: {id, targetType:'char'|'loc', targetId, cardId, cardLabel, cardIcon, tag, facedown, ts}
+// Each entry: {id, targetType:'char'|'loc', targetId, cardId, cardLabel, cardIcon, tag, ts}
+// Cards are placed face-down here when played, then all revealed and
+// resolved together via resolvePendingCards() — matching real gameplay,
+// where the Mastermind's cards stay hidden until the reveal step.
 const PENDING_CARDS=[];
 let pendingCardIdSeq=1;
 
@@ -3390,10 +3404,14 @@ function pendingClearDay(){
   PENDING_CARDS.length=0;
 }
 
-function addPendingCard(targetType, targetId, cardId, cardLabel, cardIcon, tag, facedown){
+function addPendingCard(targetType, targetId, cardId, cardLabel, cardIcon, tag){
   const id=pendingCardIdSeq++;
-  PENDING_CARDS.push({id, targetType, targetId, cardId, cardLabel, cardIcon, tag, facedown, ts:Date.now()});
+  PENDING_CARDS.push({id, targetType, targetId, cardId, cardLabel, cardIcon, tag, ts:Date.now()});
   return id;
+}
+
+function pendingCountFor(targetType, targetId){
+  return PENDING_CARDS.filter(p=>p.targetType===targetType&&p.targetId===targetId).length;
 }
 
 function removePendingCard(id){
@@ -3605,31 +3623,11 @@ function _doCardPlay(charId, cardId, card){
   const side=card.tag==='mm'?'mm':'prot';
   DAY_CARDS[side]=(DAY_CARDS[side]||0)+1;
 
-  // Apply effect
-  const u=uneaseLabel();
-  let resultDesc='';
-  if(card.effect==='unease'){
-    const prev=c.unease||0;
-    c.unease=Math.max(0,Math.min((c.maxUnease||2)+3,prev+card.delta));
-    resultDesc=`${c.name}: ${u} ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.unease})`;
-  } else if(card.effect==='intrigue'){
-    const prev=c.intr||0;
-    c.intr=Math.max(0,prev+card.delta);
-    resultDesc=`${c.name}: Intrigue ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.intr})`;
-  } else if(card.effect==='goodwill'){
-    const prev=c.gw||0;
-    c.gw=Math.max(0,prev+card.delta);
-    resultDesc=`${c.name}: Goodwill ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.gw})`;
-  } else if(card.effect==='move'){
-    resultDesc=`${c.name}: Move ${card.dir==='v'?'Vertical':card.dir==='h'?'Horizontal':'Diagonal'} applied — update location manually.`;
-  } else {
-    resultDesc=`${card.label} played on ${c.name} — no automatic token change.`;
-  }
-
-  // Log it
-  const tag=card.tag;
+  // Place face-down — effect is applied later at reveal (resolvePendingCards)
+  addPendingCard('char', charId, cardId, card.label, card.icon, card.tag);
   const overrideNote=CARD_USED[card.id]>1?' [override — used again]':'';
-  addLog(tag, card.icon, `<b>${card.label}</b> → ${c.name}${overrideNote}`, resultDesc, c.id, c.name);
+  addLog(card.tag, '🂠', `<b>${card.label}</b> placed face-down → ${c.name}${overrideNote}`,
+    'Awaiting reveal — resolve from the board footer.', c.id, c.name);
 
   document.getElementById('card-play-modal').style.display='none';
   renderBoard();
@@ -3702,8 +3700,108 @@ function _doLocCardPlay(locKey, cardId, card){
   const side=card.tag==='mm'?'mm':'prot';
   DAY_CARDS[side]=(DAY_CARDS[side]||0)+1;
 
-  if(card.delta) G.loc[locKey]=Math.max(0,Math.min(LM[locKey]+2,(G.loc[locKey]||0)+card.delta));
-  addLog(card.tag,'🔺',`<b>${card.label}</b> → ${locKey}`,`Location intrigue now ${G.loc[locKey]||0}/${LM[locKey]}`);
+  // Place face-down — effect is applied later at reveal (resolvePendingCards)
+  addPendingCard('loc', locKey, cardId, card.label, card.icon, card.tag);
+  addLog(card.tag, '🂠', `<b>${card.label}</b> placed face-down → ${locKey}`,
+    'Awaiting reveal — resolve from the board footer.');
+  document.getElementById('card-play-modal').style.display='none';
+  renderBoard();
+}
+
+// ══════════════════════════════════════════════════════════════
+// CARD REVEAL & RESOLUTION
+// Rules order: Forbid Movement → Movement → Other Forbids → Other
+// ══════════════════════════════════════════════════════════════
+
+function findCardDef(cardId, locKeyHint){
+  return MM_CARDS.find(cd=>cd.id===cardId) || PROT_CARDS.find(cd=>cd.id===cardId)
+      || getLocCards(locKeyHint||'City').find(cd=>cd.id===cardId);
+}
+
+function pendingCardTier(p){
+  const card=findCardDef(p.cardId, p.targetType==='loc'?p.targetId:null);
+  if(!card) return 3;
+  if(card.id==='p_fm') return 0;           // Forbid Movement
+  if(card.effect==='move') return 1;       // Movement
+  if(card.effect==='log_only') return 2;   // Other Forbids
+  return 3;                                // Other
+}
+const TIER_LABELS=['Forbid Movement','Movement','Other Forbids','Other'];
+
+function orderedPendingCards(){
+  return PENDING_CARDS.map(p=>({p, tier:pendingCardTier(p)})).sort((a,b)=>a.tier-b.tier);
+}
+
+function openRevealModal(){
+  if(!PENDING_CARDS.length) return;
+  const modal=document.getElementById('card-play-modal');
+  document.getElementById('cpm-title').textContent='Reveal & Resolve Cards';
+  document.getElementById('cpm-subtitle').textContent=
+    `${PENDING_CARDS.length} face-down card${PENDING_CARDS.length===1?'':'s'} — resolves in order: `
+    +TIER_LABELS.join(' → ');
+
+  let html='<div style="display:flex;flex-direction:column;gap:6px">';
+  orderedPendingCards().forEach(({p,tier})=>{
+    const targetName=p.targetType==='char'?(G.chars.find(c=>c.id===p.targetId)?.name||'?'):p.targetId;
+    html+=`<div class="ndm-row ${p.tag==='mm'?'mandatory':'optional'}">
+      <div class="ndm-icon">${p.cardIcon}</div>
+      <div class="ndm-body">
+        <div class="ndm-label">${p.cardLabel} → ${targetName}</div>
+        <div class="ndm-desc">${TIER_LABELS[tier]} · ${p.tag==='mm'?'Mastermind':'Protagonist'}</div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  html+=`<button onclick="resolvePendingCards()" style="width:100%;margin-top:12px;background:var(--red);
+    border:none;border-radius:9px;color:#fff;font-family:'Cinzel',serif;font-size:12px;font-weight:600;
+    letter-spacing:.06em;padding:13px;cursor:pointer">Resolve All In Order</button>`;
+  html+=`<button onclick="document.getElementById('card-play-modal').style.display='none'"
+    style="width:100%;margin-top:8px;background:none;border:.5px solid var(--bdr2);border-radius:9px;
+    color:var(--t3);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.06em;padding:12px;cursor:pointer">
+    Close (keep face-down)</button>`;
+
+  document.getElementById('cpm-body').innerHTML=html;
+  modal.style.display='flex';
+}
+
+function _resolveOnePendingCard(p){
+  const card=findCardDef(p.cardId, p.targetType==='loc'?p.targetId:null);
+  if(!card) return;
+  const u=uneaseLabel();
+
+  if(p.targetType==='char'){
+    const c=G.chars.find(ch=>ch.id===p.targetId); if(!c) return;
+    let resultDesc='';
+    if(card.effect==='unease'){
+      const prev=c.unease||0;
+      c.unease=Math.max(0,Math.min((c.maxUnease||2)+3,prev+card.delta));
+      resultDesc=`${c.name}: ${u} ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.unease})`;
+    } else if(card.effect==='intrigue'){
+      const prev=c.intr||0;
+      c.intr=Math.max(0,prev+card.delta);
+      resultDesc=`${c.name}: Intrigue ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.intr})`;
+    } else if(card.effect==='goodwill'){
+      const prev=c.gw||0;
+      c.gw=Math.max(0,prev+card.delta);
+      resultDesc=`${c.name}: Goodwill ${card.delta>0?'+'+card.delta:card.delta} (${prev}→${c.gw})`;
+    } else if(card.effect==='move'){
+      resultDesc=`${c.name}: Move ${card.dir==='v'?'Vertical':card.dir==='h'?'Horizontal':'Diagonal'} — update location manually.`;
+    } else {
+      resultDesc=`${card.label} resolved on ${c.name} — no automatic token change.`;
+    }
+    addLog(card.tag, card.icon, `<b>${card.label}</b> revealed → ${c.name}`, resultDesc, c.id, c.name);
+  } else if(p.targetType==='loc'){
+    const locKey=p.targetId;
+    if(card.delta) G.loc[locKey]=Math.max(0,Math.min(LM[locKey]+2,(G.loc[locKey]||0)+card.delta));
+    addLog(card.tag, card.icon, `<b>${card.label}</b> revealed → ${locKey}`,
+      `Location intrigue now ${G.loc[locKey]||0}/${LM[locKey]}`);
+  }
+}
+
+function resolvePendingCards(){
+  if(!PENDING_CARDS.length) return;
+  orderedPendingCards().forEach(({p})=>_resolveOnePendingCard(p));
+  pendingClearDay();
   document.getElementById('card-play-modal').style.display='none';
   renderBoard();
 }
@@ -3722,6 +3820,13 @@ function openNextDayModal(){
   const mandatory=[];
   const optional=[];
   const info=[];
+
+  // 0. Face-down cards not yet revealed
+  if(PENDING_CARDS.length){
+    mandatory.push({icon:'🂠',label:'Face-Down Cards Awaiting Reveal',
+      desc:`${PENDING_CARDS.length} card${PENDING_CARDS.length===1?' is':'s are'} still face-down from Day ${G.cD}. Reveal and resolve them before advancing.`,
+      action:'reveal_cards'});
+  }
 
   // 1. Check Serial Killer
   const skChars=G.chars.filter(c=>!c.dead&&c.role==='Serial Killer');
@@ -3845,6 +3950,7 @@ function openNextDayModal(){
           <div class="ndm-desc">${item.desc}</div>
           ${item.action==='serial_kill'?`<button onclick="confirmSerialKill(${item.skId},${item.victimId})" style="margin-top:6px;background:var(--rbg);border:.5px solid #5a1a15;border-radius:6px;color:var(--red2);font-family:'Cinzel',serif;font-size:10px;padding:5px 12px;cursor:pointer;letter-spacing:.06em">Apply Kill</button>`:''}
           ${item.action==='incident_fire'?`<button onclick="confirmIncidentFired('${item.incId}')" style="margin-top:6px;background:var(--rbg);border:.5px solid #5a1a15;border-radius:6px;color:var(--red2);font-family:'Cinzel',serif;font-size:10px;padding:5px 12px;cursor:pointer;letter-spacing:.06em">Mark Fired</button>`:''}
+          ${item.action==='reveal_cards'?`<button onclick="document.getElementById('next-day-modal').style.display='none';openRevealModal()" style="margin-top:6px;background:var(--rbg);border:.5px solid #5a1a15;border-radius:6px;color:var(--red2);font-family:'Cinzel',serif;font-size:10px;padding:5px 12px;cursor:pointer;letter-spacing:.06em">Reveal Now</button>`:''}
         </div>
       </div>`;
     });
