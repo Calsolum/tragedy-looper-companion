@@ -3772,8 +3772,29 @@ function pendingCardTier(p){
 }
 const TIER_LABELS=['Forbid Movement','Movement','Other Forbids','Other'];
 
+// Forbid cards cancel every pending card of the matching effect on the same
+// target today (per the rulebook: "Forbid cards cancel the effects of the
+// Action cards of the same type"). They do not affect Goodwill abilities or
+// abilities granted by roles, plots, or Incidents.
+const FORBID_CANCELS={mm_fu:'unease', mm_fg:'goodwill', p_fi:'intrigue', p_fi_loc:'loc_i', p_fm:'move'};
+
 function orderedPendingCards(){
   return PENDING_CARDS.map(p=>({p, tier:pendingCardTier(p)})).sort((a,b)=>a.tier-b.tier);
+}
+
+function pendingCancelledIds(){
+  const cancelled=new Set();
+  PENDING_CARDS.forEach(forbid=>{
+    const cancelsEffect=FORBID_CANCELS[forbid.cardId];
+    if(!cancelsEffect) return;
+    PENDING_CARDS.forEach(other=>{
+      if(other.id===forbid.id) return;
+      if(other.targetType!==forbid.targetType || other.targetId!==forbid.targetId) return;
+      const card=findCardDef(other.cardId, other.targetType==='loc'?other.targetId:null);
+      if(card && card.effect===cancelsEffect) cancelled.add(other.id);
+    });
+  });
+  return cancelled;
 }
 
 function openRevealModal(){
@@ -3784,14 +3805,16 @@ function openRevealModal(){
     `${PENDING_CARDS.length} face-down card${PENDING_CARDS.length===1?'':'s'} — resolves in order: `
     +TIER_LABELS.join(' → ');
 
+  const cancelledIds=pendingCancelledIds();
   let html='<div style="display:flex;flex-direction:column;gap:6px">';
   orderedPendingCards().forEach(({p,tier})=>{
     const targetName=p.targetType==='char'?(G.chars.find(c=>c.id===p.targetId)?.name||'?'):p.targetId;
-    html+=`<div class="ndm-row ${p.tag==='mm'?'mandatory':'optional'}">
-      <div class="ndm-icon">${p.cardIcon}</div>
+    const isCancelled=cancelledIds.has(p.id);
+    html+=`<div class="ndm-row ${p.tag==='mm'?'mandatory':'optional'}" style="${isCancelled?'opacity:.5':''}">
+      <div class="ndm-icon">${isCancelled?'🚫':p.cardIcon}</div>
       <div class="ndm-body">
-        <div class="ndm-label">${p.cardLabel} → ${targetName}</div>
-        <div class="ndm-desc">${TIER_LABELS[tier]} · ${p.tag==='mm'?'Mastermind':'Protagonist'}</div>
+        <div class="ndm-label">${p.cardLabel} → ${targetName}${isCancelled?' <span class="log-tag sys">CANCELLED</span>':''}</div>
+        <div class="ndm-desc">${TIER_LABELS[tier]} · ${p.tag==='mm'?'Mastermind':'Protagonist'}${isCancelled?' · blocked by a matching Forbid card':''}</div>
       </div>
     </div>`;
   });
@@ -3808,10 +3831,18 @@ function openRevealModal(){
   modal.style.display='flex';
 }
 
-function _resolveOnePendingCard(p){
+function _resolveOnePendingCard(p, cancelledIds){
   const card=findCardDef(p.cardId, p.targetType==='loc'?p.targetId:null);
   if(!card) return;
   const u=uneaseLabel();
+
+  if(cancelledIds.has(p.id)){
+    const targetName=p.targetType==='char'?(G.chars.find(c=>c.id===p.targetId)?.name||'?'):p.targetId;
+    addLog(card.tag, '🚫', `<b>${card.label}</b> cancelled by Forbid → ${targetName}`,
+      'A matching Forbid card blocked this effect today.',
+      p.targetType==='char'?p.targetId:null, p.targetType==='char'?targetName:'');
+    return;
+  }
 
   if(p.targetType==='char'){
     const c=G.chars.find(ch=>ch.id===p.targetId); if(!c) return;
@@ -3844,7 +3875,8 @@ function _resolveOnePendingCard(p){
 
 function resolvePendingCards(){
   if(!PENDING_CARDS.length) return;
-  orderedPendingCards().forEach(({p})=>_resolveOnePendingCard(p));
+  const cancelledIds=pendingCancelledIds();
+  orderedPendingCards().forEach(({p})=>_resolveOnePendingCard(p, cancelledIds));
   pendingClearDay();
   document.getElementById('card-play-modal').style.display='none';
   renderBoard();
