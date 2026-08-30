@@ -1690,6 +1690,239 @@ const PRELOADED_SCRIPTS_ZM = [
       {day:6,type:'Missing Person',culprit:'Patient'}
     ]
   },
+  // ── Cosmic Evil expansion scripts (Prime Evil / Cosmic Mythology) ──
+  // From the same compiled script-card reference as the variants above.
+  // Character starting locations aren't given in that source either —
+  // placeholders below use the app's established per-character location
+  // convention (majority location for that name across the other 13
+  // scripts), noted in each script.
+  {
+    num:14, name:'Secret Cat Walk', creator:'Card Deck',
+    set:'Basic Tragedy', loops:'5', days:'6', difficulty:2,
+    mainPlot:'tsi_zm', subPlots:['pv_zm','uf_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed.',
+    chars:[
+      {name:'Boy Student',role:'Person',loc:'School',maxUnease:2},
+      {name:'Rich Student',role:'Cultist',loc:'School',maxUnease:1},
+      {name:'Teacher',role:'Conspiracy Theorist',loc:'School',maxUnease:3},
+      {name:'Shrine Maiden',role:'Person',loc:'Shrine',maxUnease:2},
+      {name:'Black Cat',role:'Factor',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Brain',loc:'City',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Soldier',role:'Person',loc:'Shrine',maxUnease:3},
+    ],
+    incidents:[
+      {day:3,type:'Missing Person',culprit:'Boy Student'},
+      {day:4,type:'Hospital Incident',culprit:'Shrine Maiden'},
+      {day:6,type:'Butterfly Effect',culprit:'Black Cat'}
+    ]
+  },
+  {
+    num:15, name:'Master Thief Seven Tails', creator:'Card Deck',
+    set:'Prime Evil', loops:'4', days:'4', difficulty:2,
+    mainPlot:'pe_cl_zm', subPlots:['pe_po_zm','pe_kg_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. The Cursed Land\'s Curse-token rule isn\'t auto-tracked — see the plot description.',
+    chars:[
+      {name:'Boy Student',role:'Witch',loc:'School',maxUnease:2},
+      {name:'Rich Student',role:'Ghost',loc:'School',maxUnease:1},
+      {name:'Class Rep',role:'Coward',loc:'School',maxUnease:2},
+      {name:'Shrine Maiden',role:'Key Person',loc:'Shrine',maxUnease:2},
+      {name:'Police Officer',role:'Show-Off',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Serial Killer',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Missing Person',culprit:'Rich Student'},
+      {day:3,type:'Sacrilegious Murder',culprit:'Class Rep'},
+      {day:4,type:'Evangelium of the Dead',culprit:'Mob: School'}
+    ]
+  },
+  {
+    num:16, name:'Vamp', creator:'Card Deck',
+    set:'Prime Evil', loops:'5', days:'5', difficulty:3,
+    mainPlot:'pe_nb_zm', subPlots:['pe_twh_zm','pe_wc_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Key Person and Vampire must be of opposing sex. Witch\'s Curse rule isn\'t auto-tracked.',
+    chars:[
+      {name:'Boy Student',role:'Person',loc:'School',maxUnease:2},
+      {name:'Girl Student',role:'Key Person',loc:'School',maxUnease:3},
+      {name:'Class Rep',role:'Person',loc:'School',maxUnease:2},
+      {name:'Shrine Maiden',role:'Loved One',loc:'Shrine',maxUnease:2},
+      {name:'Alien',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Police Officer',role:'Ghost',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Vampire',loc:'City',maxUnease:3},
+      {name:'Pop Idol',role:'Witch',loc:'City',maxUnease:2},
+      {name:'Patient',role:'Serial Killer',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:3,type:'Fountain of Filth',culprit:'Mob: Hospital'},
+      {day:4,type:'Night of Madness',culprit:'Mob: City'},
+      {day:5,type:'Sacrilegious Murder',culprit:'Boy Student'}
+    ]
+  },
+  {
+    num:17, name:'Zombie Hero', creator:'Card Deck',
+    set:'Prime Evil', loops:'4', days:'5', difficulty:3,
+    mainPlot:'pe_otg_zm', subPlots:['pe_ala_zm','pe_pdl_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Transfer Student (Lover) enters play on day 5, not at loop start — add the character to the board manually that day.',
+    chars:[
+      {name:'Girl Student',role:'Person',loc:'School',maxUnease:3},
+      {name:'Mystery Boy',role:'Zombie',loc:'Shrine',maxUnease:3},
+      {name:'Transfer Student',role:'Lover',loc:'School',maxUnease:2},
+      {name:'Shrine Maiden',role:'Person',loc:'Shrine',maxUnease:2},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Show-Off',loc:'City',maxUnease:3},
+      {name:'Journalist',role:'Person',loc:'City',maxUnease:3},
+      {name:'Patient',role:'Loved One',loc:'Hospital',maxUnease:3},
+      {name:'Nurse',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Henchman',role:'Coward',loc:'School',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Evil Contamination',culprit:'Henchman'},
+      {day:3,type:'Missing Person',culprit:'Journalist'},
+      {day:4,type:'Night of Madness',culprit:'Mob: Shrine'},
+      {day:5,type:'Sacrilegious Murder',culprit:'Patient'}
+    ]
+  },
+  {
+    num:18, name:'Ultimate Halloween', creator:'Card Deck',
+    set:'Prime Evil', loops:'4', days:'6', difficulty:4,
+    mainPlot:'pe_mb_zm', subPlots:['pe_mi_zm','pe_pdl_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Special rule: the Mastermind removes Forbid Goodwill from hand — it cannot be used in any loop. Godly Being (Person) only enters play on loop 2; Transfer Student (Coward) enters play on day 4 — add both to the board manually when they enter.',
+    chars:[
+      {name:'Girl Student',role:'Person',loc:'School',maxUnease:3},
+      {name:'Mystery Boy',role:'Nightmare',loc:'Shrine',maxUnease:3},
+      {name:'Teacher',role:'Person',loc:'School',maxUnease:3},
+      {name:'Transfer Student',role:'Coward',loc:'School',maxUnease:2},
+      {name:'Alien',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Godly Being',role:'Person',loc:'City',maxUnease:3},
+      {name:'Pop Idol',role:'Person',loc:'City',maxUnease:2},
+      {name:'Forensic Specialist',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Soldier',role:'Show-Off',loc:'Shrine',maxUnease:3},
+      {name:'Patient',role:'Werewolf',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Awakened Curse',culprit:'Mob: School'},
+      {day:2,type:'Increasing Unease',culprit:'Pop Idol'},
+      {day:3,type:'The Executioner',culprit:'Girl Student'},
+      {day:4,type:'Sacrilegious Murder',culprit:'Soldier'},
+      {day:5,type:'Night of Madness',culprit:'Mob: Hospital'},
+      {day:6,type:'Missing Person',culprit:'Mystery Boy'}
+    ]
+  },
+  {
+    num:19, name:'Banquet School Life', creator:'Card Deck',
+    set:'Cosmic Mythology', loops:'4', days:'4', difficulty:3,
+    mainPlot:'cm_gtba_zm', subPlots:['cm_res_zm','cm_aur_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed.',
+    chars:[
+      {name:'Boy Student',role:'Conspiracy Theorist',loc:'School',maxUnease:2},
+      {name:'Girl Student',role:'Witch',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Serial Killer',loc:'School',maxUnease:1},
+      {name:'Shrine Maiden',role:'Person',loc:'Shrine',maxUnease:2},
+      {name:'Police Officer',role:'Person',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Wizard',loc:'City',maxUnease:3},
+      {name:'Doctor',role:'Deep One',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Missing Person',culprit:'Rich Student'},
+      {day:3,type:'Evil Contamination',culprit:'Shrine Maiden'},
+      {day:4,type:'Insane Murder',culprit:'Boy Student'}
+    ]
+  },
+  {
+    num:20, name:'Eyes Without Vision', creator:'Card Deck',
+    set:'Cosmic Mythology', loops:'4', days:'5', difficulty:4,
+    mainPlot:'cm_br_zm', subPlots:['cm_pws_zm','cm_pr_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Bloody Rites\' Extra Gauge / corpse-count condition isn\'t auto-tracked — see the plot description.',
+    chars:[
+      {name:'Girl Student',role:'Witness',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Person',loc:'School',maxUnease:1},
+      {name:'Class Rep',role:'Witch',loc:'School',maxUnease:2},
+      {name:'Shrine Maiden',role:'Person',loc:'Shrine',maxUnease:2},
+      {name:'Alien',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Office Worker',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Time Traveler',loc:'City',maxUnease:3},
+      {name:'Doctor',role:'Serial Killer',loc:'Hospital',maxUnease:3},
+      {name:'Patient',role:'Immortal',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Missing Person',culprit:'Doctor'},
+      {day:3,type:'Hound Dog Scent',culprit:'Alien'},
+      {day:4,type:'The Executioner',culprit:'Girl Student'},
+      {day:5,type:'Insane Murder',culprit:'Office Worker'}
+    ]
+  },
+  {
+    num:21, name:'Bella Stellarum', creator:'Card Deck',
+    set:'Cosmic Mythology', loops:'4', days:'5', difficulty:4,
+    mainPlot:'cm_kiy_zm', subPlots:['cm_tt_zm','cm_wftd_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Twisted Truth\'s "extra" main plot here is Bloody Rites; Whispers from the Deep makes Nurse (Paranoiac) a second Key-Person-style death condition. The King in Yellow\'s Extra Gauge condition isn\'t auto-tracked. Godly Being (Paranoiac) only enters play on loop 2 — add to the board manually when it enters.',
+    chars:[
+      {name:'Class Rep',role:'Sacrifice',loc:'School',maxUnease:2},
+      {name:'Mystery Boy',role:'Serial Killer',loc:'Shrine',maxUnease:3},
+      {name:'Godly Being',role:'Paranoiac',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Cultist',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Person',loc:'City',maxUnease:3},
+      {name:'Journalist',role:'Person',loc:'City',maxUnease:3},
+      {name:'Pop Idol',role:'Person',loc:'City',maxUnease:2},
+      {name:'Patient',role:'Deep One',loc:'Hospital',maxUnease:3},
+      {name:'Nurse',role:'Paranoiac',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'The Executioner',culprit:'Patient'},
+      {day:2,type:'Discovery',culprit:'Office Worker'},
+      {day:4,type:'Insane Murder',culprit:'Class Rep'},
+      {day:5,type:'Uproar',culprit:'Godly Being'}
+    ]
+  },
+  {
+    num:22, name:'An Ordinary Day in Misuka City', creator:'Card Deck',
+    set:'Cosmic Mythology', loops:'4', days:'6', difficulty:5,
+    mainPlot:'cm_swod_zm', subPlots:['cm_fg_zm','cm_tt_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. Twisted Truth\'s "extra" main plot here is Giant Time Bomb Again. Sacred Words of Dagon\'s Shrine-Intrigue-vs-Extra-Gauge condition isn\'t auto-tracked.',
+    chars:[
+      {name:'Girl Student',role:'Person',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Faceless',loc:'School',maxUnease:1},
+      {name:'Mystery Boy',role:'Witch',loc:'Shrine',maxUnease:3},
+      {name:'Alien',role:'Wizard',loc:'Shrine',maxUnease:3},
+      {name:'Office Worker',role:'Cultist',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Deep One',loc:'City',maxUnease:3},
+      {name:'Journalist',role:'Key Person',loc:'City',maxUnease:3},
+      {name:'Patient',role:'Paranoiac',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Insane Murder',culprit:'Rich Student'},
+      {day:3,type:'Fire of Demise',culprit:'Alien'},
+      {day:4,type:'Uproar',culprit:'Patient'},
+      {day:6,type:'Evil Contamination',culprit:'Informant'}
+    ]
+  },
+  {
+    num:23, name:'Cosmic Insignificance', creator:'Card Deck',
+    set:'Cosmic Mythology', loops:'5', days:'6', difficulty:5,
+    mainPlot:'cm_kiy_zm', subPlots:['cm_fg_zm','cm_res_zm'],
+    note:'From a compiled script-card reference. Character starting locations aren\'t given in that source and use the app\'s per-character convention as placeholder — reposition as needed. The King in Yellow\'s Extra Gauge condition isn\'t auto-tracked. Godly Being (Sacrifice) only enters play on loop 5 — add to the board manually when it enters.',
+    chars:[
+      {name:'Class Rep',role:'Person',loc:'School',maxUnease:2},
+      {name:'Mystery Boy',role:'Immortal',loc:'Shrine',maxUnease:3},
+      {name:'Alien',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Godly Being',role:'Sacrifice',loc:'City',maxUnease:3},
+      {name:'Illusion',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Black Cat',role:'Cultist',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+      {name:'Journalist',role:'Wizard',loc:'City',maxUnease:3},
+      {name:'Nurse',role:'Faceless',loc:'City',maxUnease:3},
+      {name:'Henchman',role:'Conspiracy Theorist',loc:'School',maxUnease:3},
+    ],
+    incidents:[
+      {day:1,type:'Discovery',culprit:'Henchman'},
+      {day:2,type:'Insane Murder',culprit:'Black Cat'},
+      {day:3,type:'Increasing Unease',culprit:'Office Worker'},
+      {day:4,type:'Increasing Unease',culprit:'Journalist'},
+      {day:5,type:'Evil Contamination',culprit:'Class Rep'},
+      {day:6,type:'The Executioner',culprit:'Godly Being'}
+    ]
+  },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -1698,7 +1931,9 @@ const PRELOADED_SCRIPTS_ZM = [
 const LOCS=['City','Shrine','Hospital','School'];
 const LM={City:3,Shrine:2,Hospital:2,School:2};
 const INCIDENTS_NT=['Homicide','Suicide','Faraway Murder','Transfer Friendship','Missing Person','Hospital Horror','Increasing Unease','Butterfly Effect','Foul Evil'];
-const INCIDENTS_ZM=['Murder','Suicide','Spreading','Increasing Unease','Foul Evil','Missing Person','Butterfly Effect','Hospital Incident','Faraway Murder'];
+const INCIDENTS_ZM=['Murder','Suicide','Spreading','Increasing Unease','Foul Evil','Missing Person','Butterfly Effect','Hospital Incident','Faraway Murder',
+  // Cosmic Evil expansion (Prime Evil / Cosmic Mythology) — from preloaded script cards
+  'Sacrilegious Murder','Evangelium of the Dead','Fountain of Filth','Night of Madness','Awakened Curse','The Executioner','Evil Contamination','Insane Murder','Discovery','Uproar','Fire of Demise','Hound Dog Scent'];
 
 const G={
   version:'nt',
