@@ -980,6 +980,129 @@ const PLOTS_ZM = [
    roles:['Factor'],
    wcs:[],
    desc:'(Z-Man) Factor gains CT abilities if School has 2+ Intrigue; gains Key Person abilities if City has 2+ Intrigue.'},
+
+  // ══════════════════════════════════════════════════════════
+  // COSMIC EVIL EXPANSION — Prime Evil Tragedy Set
+  // Sourced from the Cosmic Evil Player's Handbook. Most main plots
+  // read "Plot rule: none" — their loss condition is the Key Person's
+  // own always-on death ability (same pattern as the base game), so
+  // only that gets a formal win condition here; other plot rules use
+  // mechanics the app doesn't automate (Curse tokens, per-day ability
+  // triggers) and are left descriptive in `desc` rather than faked
+  // with an inexact win-condition type.
+  // ══════════════════════════════════════════════════════════
+  {id:'pe_nb_zm',set:'prime_evil',type:'main',name:'The Noble Bloodline',
+   roles:['Key Person','Vampire'],
+   wcs:[{id:'kp_death',label:'Key Person Dies',
+    desc:'If the Key Person dies for any reason, the Protagonists lose immediately.',
+    type:'key_person_death',timing:'immediate'}],
+   desc:'(Cosmic Evil — Prime Evil) Key Person and Vampire must be of opposing sex. Key Person death ends loop immediately. Vampire: may kill Key Person (2+ Intrigue, same location) or Protagonists (2+ corpses at Vampire\'s starting location).'},
+  {id:'pe_otg_zm',set:'prime_evil',type:'main',name:'The Ones from the Grave',
+   roles:[],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) No roles added. All corpses that had the role Person, Coward, or Show-Off change into having the role Zombie. Zombies kill a character where zombies are outnumbered by non-zombies at day end.'},
+  {id:'pe_mb_zm',set:'prime_evil',type:'main',name:'Moonlight Beast',
+   roles:['Werewolf'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) Werewolf: if Night of Madness occurred this day, may kill the Protagonists at day end; Mastermind cannot place cards on this character.'},
+  {id:'pe_nmn_zm',set:'prime_evil',type:'main',name:'Night Mist Nightmare',
+   roles:['Nightmare'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) Nightmare (Unkillable): at day end may kill one character in its location; if 3+ Intrigue total across all corpses, may kill the Protagonists instead.'},
+  {id:'pe_cl_zm',set:'prime_evil',type:'main',name:'The Cursed Land',
+   roles:['Ghost','Show-Off'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) At the start of each loop, may place a Curse on the Ghost\'s starting location. [Optional][Day end] Unless all Location curses can be attached to characters, may kill the Protagonists. (Curse tokens are not tracked automatically — track manually.)'},
+  {id:'pe_twh_zm',set:'prime_evil',type:'sub',name:'Those with Habits',
+   roles:['Ghost','Serial Killer','Loved One'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) No independent win condition — adds Ghost, Serial Killer, and Loved One as misdirection.'},
+  {id:'pe_mi_zm',set:'prime_evil',type:'sub',name:'Monster Intrigue',
+   roles:['Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) [Optional][Mastermind ability] Twice per loop, once per day: may place 1 Intrigue on a location where a character with Goodwill Refusal is present.'},
+  {id:'pe_ala_zm',set:'prime_evil',type:'sub',name:'A Love Affair',
+   roles:['Lover','Loved One'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) Loved One dies → Lover gets 6 Paranoia. Lover dies → Loved One gets 6 Paranoia. Loved One (3+ Paranoia, 1+ Intrigue) can kill Protagonists.'},
+  {id:'pe_wc_zm',set:'prime_evil',type:'sub',name:'Witch\'s Curse',
+   roles:['Conspiracy Theorist','Witch'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) At the start of each loop, may place a Curse on the Witch\'s starting location. (Curse tokens are not tracked automatically — track manually.)'},
+  {id:'pe_kg_zm',set:'prime_evil',type:'sub',name:'The Key Girl',
+   roles:['Key Person (must be a Girl)'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) No independent win condition — just ensures a (girl) Key Person exists as misdirection; her death is a loss via the Key Person role\'s own ability.'},
+  {id:'pe_po_zm',set:'prime_evil',type:'sub',name:'Panic and Obsession',
+   roles:['Serial Killer','Coward','Witch'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) No independent win condition — adds Serial Killer, Coward, and Witch as misdirection.'},
+  {id:'pe_pdl_zm',set:'prime_evil',type:'sub',name:'People Who Don\'t Listen',
+   roles:['Show-Off','Conspiracy Theorist','Coward'],
+   wcs:[],
+   desc:'(Cosmic Evil — Prime Evil) No independent win condition — adds Show-Off, Conspiracy Theorist, and Coward as misdirection.'},
+
+  // ══════════════════════════════════════════════════════════
+  // COSMIC EVIL EXPANSION — Cosmic Mythology Tragedy Set
+  // This set's plots revolve around a shared "Extra Gauge" tracker the
+  // app doesn't model (no G.extraGauge state, no UI for it), so those
+  // win conditions are described in `desc` for manual tracking rather
+  // than approximated with an inexact win-condition type.
+  // ══════════════════════════════════════════════════════════
+  {id:'cm_cog_zm',set:'cosmic_mythology',type:'main',name:'Choir to the Outside God',
+   roles:['Key Person','Sacrifice','Immortal'],
+   wcs:[{id:'kp_death',label:'Key Person Dies',
+    desc:'If the Key Person dies for any reason, the Protagonists lose immediately.',
+    type:'key_person_death',timing:'immediate'}],
+   desc:'(Cosmic Evil — Cosmic Mythology) Key Person death ends loop immediately. Also: at loop end, if 5+ characters have any Intrigue on them, the Protagonists lose (track manually).'},
+  {id:'cm_gtba_zm',set:'cosmic_mythology',type:'main',name:'Giant Time Bomb Again',
+   roles:['Witch','Deep One'],
+   wcs:[{id:'witch_start_i_cm',label:'2+ Intrigue on Witch\'s Starting Location at Loop End',
+    desc:'At Loop End, if the Witch\'s starting Location has 2+ Intrigue, the Protagonists lose.',
+    type:'char_start_loc_intrigue',role:'Witch',threshold:2,timing:'loop_end'}],
+   desc:'(Cosmic Evil — Cosmic Mythology) Flood the Witch\'s starting location with 2+ Intrigue.'},
+  {id:'cm_swod_zm',set:'cosmic_mythology',type:'main',name:'The Sacred Words of Dagon',
+   roles:['Key Person','Cultist','Deep One'],
+   wcs:[{id:'kp_death',label:'Key Person Dies',
+    desc:'If the Key Person dies for any reason, the Protagonists lose immediately.',
+    type:'key_person_death',timing:'immediate'}],
+   desc:'(Cosmic Evil — Cosmic Mythology) Key Person death ends loop immediately. Also: at loop end, if Shrine Intrigue >= the Extra Gauge (Protagonists always lose if the Gauge is 0), the Protagonists lose (track the Extra Gauge manually).'},
+  {id:'cm_br_zm',set:'cosmic_mythology',type:'main',name:'Bloody Rites',
+   roles:['Witch','Immortal'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) At loop end, if the corpse count >= the Extra Gauge, the Protagonists lose (auto-lose if the Gauge is 0). Extra Gauge is not tracked automatically — track manually.'},
+  {id:'cm_kiy_zm',set:'cosmic_mythology',type:'main',name:'The King in Yellow',
+   roles:['Sacrifice','Cultist'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) At loop end, if the Extra Gauge increased at all this loop, the Protagonists lose. Extra Gauge is not tracked automatically — track manually.'},
+  {id:'cm_aur_zm',set:'cosmic_mythology',type:'sub',name:'An Unsettling Rumor',
+   roles:['Conspiracy Theorist'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) [Optional] Once per loop, at Mastermind Ability step, may add 1 Intrigue to a Location of choice.'},
+  {id:'cm_wftd_zm',set:'cosmic_mythology',type:'sub',name:'Whispers from the Deep',
+   roles:['Deep One','Paranoiac'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) [Mandatory] The Paranoiac gains all the abilities of the Key Person — including the death-ends-loop ability (track this character\'s death as a loss condition too).'},
+  {id:'cm_res_zm',set:'cosmic_mythology',type:'sub',name:'The Resistance',
+   roles:['Conspiracy Theorist','Wizard','Serial Killer'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) No independent win condition — adds Conspiracy Theorist, Wizard, and Serial Killer as misdirection.'},
+  {id:'cm_pws_zm',set:'cosmic_mythology',type:'sub',name:'People Who Saw',
+   roles:['Conspiracy Theorist','Witness'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) No independent win condition — adds Conspiracy Theorist and Witness as misdirection.'},
+  {id:'cm_pr_zm',set:'cosmic_mythology',type:'sub',name:'The Profound Race',
+   roles:['Serial Killer','Time Traveler'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) No independent win condition — adds Serial Killer and Time Traveler as misdirection.'},
+  {id:'cm_fg_zm',set:'cosmic_mythology',type:'sub',name:'The Faceless God',
+   roles:['Faceless','Wizard'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) No independent win condition. Faceless gains Conspiracy Theorist\'s abilities while the Extra Gauge is <=1, or Deep One\'s abilities while it is >=2 (track the Extra Gauge manually).'},
+  {id:'cm_tt_zm',set:'cosmic_mythology',type:'sub',name:'Twisted Truth',
+   roles:['Paranoiac'],
+   wcs:[],
+   desc:'(Cosmic Evil — Cosmic Mythology) On script creation, an "extra" main plot is chosen alongside the Paranoiac. If the Extra Gauge is 2+ at loop start, the original main plot is deprecated and the extra main plot activates instead for that loop (track the Extra Gauge manually).'},
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -1781,27 +1904,29 @@ function loadAndEdit(idx){
 }
 
 // ── PLOT RENDERING ──
+const SET_LABELS={fs:'First Steps', bt:'Basic Tragedy', prime_evil:'Prime Evil', cosmic_mythology:'Cosmic Mythology'};
+const SET_ORDER=['fs','bt','prime_evil','cosmic_mythology'];
+function renderPlotGroup(all,type,el){
+  el.innerHTML='';
+  SET_ORDER.forEach((setCode,i)=>{
+    const plots=all.filter(p=>p.set===setCode&&p.type===type);
+    if(!plots.length) return;
+    const margin=i===0?'margin-bottom:6px':'margin:10px 0 6px';
+    el.insertAdjacentHTML('beforeend',`<div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);${margin}">${(SET_LABELS[setCode]||setCode).toUpperCase()}</div>`);
+    plots.forEach(p=>el.appendChild(makePlotEl(p,type)));
+  });
+}
 function renderPlotLists(){
   const all=getPlots();
-  const fsMains=all.filter(p=>p.set==='fs'&&p.type==='main');
-  const btMains=all.filter(p=>p.set==='bt'&&p.type==='main');
-  const fsSubs=all.filter(p=>p.set==='fs'&&p.type==='sub');
-  const btSubs=all.filter(p=>p.set==='bt'&&p.type==='sub');
-  const ml=document.getElementById('main-plot-list');
-  ml.innerHTML='';
-  if(fsMains.length){ml.insertAdjacentHTML('beforeend','<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);margin-bottom:6px">FIRST STEPS</div>');fsMains.forEach(p=>ml.appendChild(makePlotEl(p,'main')));}
-  if(btMains.length){ml.insertAdjacentHTML('beforeend','<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);margin:10px 0 6px">BASIC TRAGEDY</div>');btMains.forEach(p=>ml.appendChild(makePlotEl(p,'main')));}
-  const sl=document.getElementById('sub-plot-list');
-  sl.innerHTML='';
-  if(fsSubs.length){sl.insertAdjacentHTML('beforeend','<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);margin-bottom:6px">FIRST STEPS</div>');fsSubs.forEach(p=>sl.appendChild(makePlotEl(p,'sub')));}
-  if(btSubs.length){sl.insertAdjacentHTML('beforeend','<div style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);margin:10px 0 6px">BASIC TRAGEDY</div>');btSubs.forEach(p=>sl.appendChild(makePlotEl(p,'sub')));}
+  renderPlotGroup(all,'main',document.getElementById('main-plot-list'));
+  renderPlotGroup(all,'sub',document.getElementById('sub-plot-list'));
   renderDerivedWCs();
 }
 function makePlotEl(p,mode){
   const isSel=mode==='main'?G.mainPlot===p.id:G.subPlots.includes(p.id);
   const d=document.createElement('div');
   d.className='plot-opt'+(isSel?' sel':'');
-  d.innerHTML=`<div class="plot-badge">${p.set==='fs'?'First Steps':'Basic Tragedy'} — ${mode==='main'?'Main Plot':'Subplot'}</div>
+  d.innerHTML=`<div class="plot-badge">${SET_LABELS[p.set]||p.set} — ${mode==='main'?'Main Plot':'Subplot'}</div>
     <div class="plot-name">${p.name}</div>
     <div class="plot-desc">${p.desc}</div>
     <div class="plot-roles">${p.roles.map(r=>`<span class="role-chip${isSel?' req':''}">${r}</span>`).join('')}</div>`;
