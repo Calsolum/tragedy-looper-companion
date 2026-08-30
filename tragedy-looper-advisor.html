@@ -1297,102 +1297,134 @@ const PRELOADED_SCRIPTS_ZM = [
     num:2, name:'Prevailing Secrecy', creator:'BakaFire',
     set:'First Steps', loops:'4', days:'5', difficulty:2,
     mainPlot:'apt_zm', subPlots:['aur_fs_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations, incident days, and the exact subplot before play. Win via 2 Intrigue on the School (A Place to Protect), or kill the Key Person (Doctor) with the Hospital Incident or a Faraway Murder around day 5. Build Paranoia on the Shrine Maiden (Conspiracy Theorist) to set up Hospital Incident.',
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
     chars:[
+      {name:'Boy Student',role:'Cultist',loc:'School',maxUnease:2},
+      {name:'Girl Student',role:'Person',loc:'City',maxUnease:3},
+      {name:'Shrine Maiden',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:2},
+      {name:'Office Worker',role:'Person',loc:'Hospital',maxUnease:3},
       {name:'Doctor',role:'Key Person',loc:'Hospital',maxUnease:3},
-      {name:'Shrine Maiden',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
-      {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
-      {name:'Girl Student',role:'Person',loc:'School',maxUnease:3},
-      {name:'Boy Student',role:'Person',loc:'School',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'School',maxUnease:3},
     ],
     incidents:[
-      {day:3,type:'Hospital Incident',culprit:'Shrine Maiden'},
-      {day:5,type:'Faraway Murder',culprit:'Shrine Maiden'}
+      {day:1,type:'Increasing Unease',culprit:'Shrine Maiden'},
+      {day:3,type:'Hospital Incident',culprit:'Boy Student'},
+      {day:5,type:'Faraway Murder',culprit:'Patient'}
     ]
   },
   {
     num:3, name:'Young Women\'s Battlefield', creator:'Gayusu',
-    set:'Basic Tragedy', loops:'4', days:'5', difficulty:1,
-    mainPlot:'swm_zm', subPlots:['hf_zm','ala_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Win via 2 Intrigue on the Shrine Maiden (Key Person), her death via the Serial Killer, killing the Friend (Girl Student), or the Loved One\'s ability. Keep the Friend unrevealed as long as possible.',
+    set:'Basic Tragedy', loops:'4', days:'6', difficulty:1,
+    mainPlot:'swm_zm', subPlots:['ala_zm','hf_zm'],
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
     chars:[
-      {name:'Shrine Maiden',role:'Key Person (must be a Girl)',loc:'Shrine',maxUnease:3},
-      {name:'Girl Student',role:'Friend',loc:'School',maxUnease:3},
-      {name:'Pop Idol',role:'Serial Killer',loc:'City',maxUnease:3},
-      {name:'Boy Student',role:'Lover',loc:'School',maxUnease:3},
-      {name:'Office Worker',role:'Loved One',loc:'City',maxUnease:3},
+      {name:'Boy Student',role:'Person',loc:'City',maxUnease:2},
+      {name:'Girl Student',role:'Friend',loc:'Shrine',maxUnease:3},
+      {name:'Class Rep',role:'Loved One',loc:'Hospital',maxUnease:2},
+      {name:'Shrine Maiden',role:'Key Person (must be a Girl)',loc:'School',maxUnease:2},
+      {name:'Police Officer',role:'Person',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Lover',loc:'Shrine',maxUnease:3},
+      {name:'Informant',role:'Serial Killer',loc:'Hospital',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'School',maxUnease:3},
+      {name:'Nurse',role:'Person',loc:'City',maxUnease:3},
     ],
     incidents:[
-      {day:2,type:'Increasing Unease',culprit:'Pop Idol'},
-      {day:4,type:'Foul Evil',culprit:'Office Worker'}
+      {day:3,type:'Foul Evil',culprit:'Office Worker'},
+      {day:4,type:'Increasing Unease',culprit:'Class Rep'},
+      {day:6,type:'Suicide',culprit:'Girl Student'}
     ]
   },
   {
     num:4, name:'Lesser of Two Evils', creator:'GEnd',
-    set:'Basic Tragedy', loops:'4', days:'5', difficulty:1,
+    set:'Basic Tragedy', loops:'4', days:'7', difficulty:1,
     mainPlot:'tsi_zm', subPlots:['hf_zm','uf_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Win via 2 Intrigue on the Shrine, killing the Friend (Shrine Maiden) via the Serial Killer, or killing the Factor with 2+ Intrigue on the City. Use the Brain\'s ability freely from turn 1; avoid the Cultist unless necessary.',
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
     chars:[
-      {name:'A.I.',role:'Brain',loc:'City',maxUnease:3},
-      {name:'Shrine Maiden',role:'Friend',loc:'Shrine',maxUnease:3},
-      {name:'Rich Man\'s Daughter',role:'Factor',loc:'City',maxUnease:3},
-      {name:'Journalist',role:'Serial Killer',loc:'City',maxUnease:3},
-      {name:'Office Worker',role:'Cultist',loc:'City',maxUnease:3},
+      {name:'Boy Student',role:'Person',loc:'City',maxUnease:2},
+      {name:'Girl Student',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Rich Student',role:'Brain',loc:'Hospital',maxUnease:1},
+      {name:'Shrine Maiden',role:'Friend',loc:'School',maxUnease:2},
+      {name:'Office Worker',role:'Serial Killer',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Journalist',role:'Factor',loc:'Hospital',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'School',maxUnease:3},
+      {name:'Nurse',role:'Cultist',loc:'City',maxUnease:3},
     ],
     incidents:[
-      {day:2,type:'Missing Person',culprit:'Rich Man\'s Daughter'},
-      {day:4,type:'Increasing Unease',culprit:'Journalist'}
+      {day:2,type:'Increasing Unease',culprit:'Rich Student'},
+      {day:4,type:'Missing Person',culprit:'Nurse'},
+      {day:5,type:'Missing Person',culprit:'Boy Student'},
+      {day:7,type:'Suicide',culprit:'Journalist'}
     ]
   },
   {
     num:5, name:'The Secret That Was Kept', creator:'Bakafire',
-    set:'Basic Tragedy', loops:'4', days:'5', difficulty:2,
-    mainPlot:'gtb_zm', subPlots:['cof_zm','tof_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Witch\'s starting location is the School. Win via 2+ Intrigue on the School, killing a Friend (Office Worker) via Hospital Incident, or killing the Protagonists via Hospital Incident. Push for the Suicide on day 2; use Forbid Goodwill on the Witch until then. Keep the second Friend (Alien) hidden for Final Guess.',
+    set:'Basic Tragedy', loops:'4', days:'7', difficulty:2,
+    mainPlot:'gtb_zm', subPlots:['tof_zm','cof_zm'],
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
     chars:[
-      {name:'Alien',role:'Witch',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Witch',loc:'City',maxUnease:1},
+      {name:'Class Rep',role:'Person',loc:'Shrine',maxUnease:2},
+      {name:'Shrine Maiden',role:'Person',loc:'School',maxUnease:2},
+      {name:'Alien',role:'Friend',loc:'Hospital',maxUnease:3},
       {name:'Office Worker',role:'Friend',loc:'City',maxUnease:3},
-      {name:'Girl Student',role:'Friend',loc:'School',maxUnease:3},
-      {name:'Pop Idol',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Pop Idol',role:'Person',loc:'School',maxUnease:2},
+      {name:'Journalist',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'City',maxUnease:3},
     ],
     incidents:[
-      {day:2,type:'Suicide',culprit:'Alien'},
-      {day:4,type:'Hospital Incident',culprit:'Office Worker'}
+      {day:2,type:'Suicide',culprit:'Rich Student'},
+      {day:3,type:'Missing Person',culprit:'Office Worker'},
+      {day:4,type:'Hospital Incident',culprit:'Journalist'},
+      {day:6,type:'Spreading',culprit:'Shrine Maiden'},
+      {day:7,type:'Foul Evil',culprit:'Pop Idol'}
     ]
   },
   {
     num:6, name:'The Future of the Gods', creator:'Nightly Moonfire group',
-    set:'Basic Tragedy', loops:'4', days:'6', difficulty:3,
+    set:'Basic Tragedy', loops:'4', days:'7', difficulty:3,
     mainPlot:'ctf_zm', subPlots:['hf_zm','ala_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Uses the special "Godly Being" character (Pop Idol\'s fanatic, the Police Officer). Win via Butterfly Effect (Change of Future), ending a loop with 2 or less Goodwill on the Boy Student (Time Traveler), killing the Friend (Nurse) via Serial Killer, or the Loved One\'s ability. The Godly Being and the Love Affair subplot only come into play from loop 3 on — keep both hidden until then.',
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed. Uses the special "Godly Being" character as the Loved One.',
     chars:[
-      {name:'Boy Student',role:'Time Traveler',loc:'City',maxUnease:3},
-      {name:'Pop Idol',role:'Cultist',loc:'City',maxUnease:3},
-      {name:'Nurse',role:'Friend',loc:'Hospital',maxUnease:3},
-      {name:'Police Officer',role:'Serial Killer',loc:'City',maxUnease:3},
-      {name:'Doctor',role:'Lover',loc:'Hospital',maxUnease:3},
-      {name:'Girl Student',role:'Loved One',loc:'School',maxUnease:3},
+      {name:'Boy Student',role:'Time Traveler',loc:'City',maxUnease:2},
+      {name:'Rich Student',role:'Person',loc:'Shrine',maxUnease:1},
+      {name:'Shrine Maiden',role:'Cultist',loc:'School',maxUnease:2},
+      {name:'Godly Being',role:'Loved One',loc:'Hospital',maxUnease:3},
+      {name:'Police Officer',role:'Person',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Serial Killer',loc:'Shrine',maxUnease:3},
+      {name:'Pop Idol',role:'Lover',loc:'School',maxUnease:2},
+      {name:'Patient',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Nurse',role:'Friend',loc:'City',maxUnease:3},
     ],
     incidents:[
-      {day:1,type:'Butterfly Effect',culprit:'Pop Idol'},
-      {day:5,type:'Increasing Unease',culprit:'Boy Student'}
+      {day:2,type:'Suicide',culprit:'Pop Idol'},
+      {day:4,type:'Increasing Unease',culprit:'Shrine Maiden'},
+      {day:5,type:'Butterfly Effect',culprit:'Police Officer'},
+      {day:7,type:'Foul Evil',culprit:'Patient'}
     ]
   },
   {
     num:7, name:'Mirror Passcode', creator:'M. Hydromel',
-    set:'Basic Tragedy', loops:'4', days:'6', difficulty:3,
-    mainPlot:'swm_zm', subPlots:['uf_zm','aur_bt_zm'],
-    note:'⚠ PARTIAL DATA — reconstructed from the Handbook\'s Victory Conditions/hints, not a setup table. Verify locations and incident days before play. Uses the tilting "Mystery Boy" character. Win via 2 Intrigue on the Girl Student (Key Person), her death, killing the Factor (Rich Man\'s Daughter) with 2+ Intrigue on the City, or killing the Protagonists — all primarily via Serial Killer / Hospital Incident / Murder Incident. Even if all other roles are revealed, the Protagonists should still not know which girl is the Key Person.',
+    set:'Basic Tragedy', loops:'4', days:'7', difficulty:3,
+    mainPlot:'swm_zm', subPlots:['uf_zm','pv_zm'],
+    note:'Cast, roles, and incident schedule confirmed from a compiled script-card reference. Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
     chars:[
-      {name:'Girl Student',role:'Key Person (must be a Girl)',loc:'School',maxUnease:3},
-      {name:'Rich Man\'s Daughter',role:'Factor',loc:'City',maxUnease:3},
-      {name:'Mystery Boy',role:'Serial Killer',loc:'City',maxUnease:3},
-      {name:'Shrine Maiden',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Boy Student',role:'Person',loc:'City',maxUnease:2},
+      {name:'Girl Student',role:'Key Person',loc:'Shrine',maxUnease:3},
+      {name:'Rich Student',role:'Factor',loc:'Hospital',maxUnease:1},
+      {name:'Mystery Boy',role:'Cultist',loc:'School',maxUnease:3},
       {name:'Office Worker',role:'Person',loc:'City',maxUnease:3},
+      {name:'Informant',role:'Conspiracy Theorist',loc:'Shrine',maxUnease:3},
+      {name:'Journalist',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Patient',role:'Person',loc:'School',maxUnease:3},
+      {name:'Nurse',role:'Person',loc:'City',maxUnease:3},
     ],
     incidents:[
-      {day:2,type:'Murder',culprit:'Mystery Boy'},
-      {day:4,type:'Hospital Incident',culprit:'Rich Man\'s Daughter'}
+      {day:3,type:'Missing Person',culprit:'Rich Student'},
+      {day:4,type:'Increasing Unease',culprit:'Journalist'},
+      {day:5,type:'Hospital Incident',culprit:'Mystery Boy'},
+      {day:7,type:'Murder',culprit:'Boy Student'}
     ]
   },
   {
@@ -1461,6 +1493,78 @@ const PRELOADED_SCRIPTS_ZM = [
       {day:4,type:'Foul Evil',culprit:'Mystery Boy'},
       {day:5,type:'Missing Person',culprit:'Alien'},
       {day:6,type:'Hospital Incident',culprit:'Doctor'}
+    ]
+  },
+  // ── Alternate-source variants ──
+  // A separately-compiled script-card reference gives a different cast and
+  // incident schedule for these 3 scripts than the New Tragedies rulebook
+  // used above (same main plot/subplot family, different realization).
+  // Both are kept so either can be picked.
+  {
+    num:11, name:'The First Script (Card Deck Variant)', creator:'BakaFire',
+    set:'First Steps', loops:'3', days:'4', difficulty:1,
+    mainPlot:'mp_fs_zm', subPlots:['sotr_zm'],
+    note:'Alternate realization of The First Script from a compiled script-card reference — different cast/incidents than the "The First Script" entry above (adapted from the New Tragedies rulebook). Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
+    chars:[
+      {name:'Boy Student',role:'Person',loc:'City',maxUnease:2},
+      {name:'Girl Student',role:'Key Person',loc:'School',maxUnease:3},
+      {name:'Shrine Maiden',role:'Serial Killer',loc:'Shrine',maxUnease:2},
+      {name:'Police Officer',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Killer',loc:'City',maxUnease:3},
+      {name:'Doctor',role:'Brain',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Murder',culprit:'Office Worker'},
+      {day:3,type:'Suicide',culprit:'Girl Student'}
+    ]
+  },
+  {
+    num:12, name:'Prologue (Card Deck Variant)', creator:'BakaFire',
+    set:'Basic Tragedy', loops:'5', days:'7', difficulty:5,
+    mainPlot:'mp_bt_zm', subPlots:['cof_zm','ala_zm'],
+    note:'Alternate realization of Prologue from a compiled script-card reference — different cast/incidents than the "Prologue" entry above (adapted from the New Tragedies rulebook). Character starting locations aren\'t given in that source and are placeholder — reposition as needed.',
+    chars:[
+      {name:'Boy Student',role:'Lover',loc:'City',maxUnease:2},
+      {name:'Girl Student',role:'Loved One',loc:'School',maxUnease:3},
+      {name:'Rich Student',role:'Killer',loc:'Hospital',maxUnease:1},
+      {name:'Shrine Maiden',role:'Key Person',loc:'Shrine',maxUnease:2},
+      {name:'Police Officer',role:'Conspiracy Theorist',loc:'City',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'Shrine',maxUnease:3},
+      {name:'Informant',role:'Friend',loc:'Hospital',maxUnease:3},
+      {name:'Doctor',role:'Brain',loc:'School',maxUnease:3},
+      {name:'Patient',role:'Friend',loc:'City',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Increasing Unease',culprit:'Office Worker'},
+      {day:4,type:'Suicide',culprit:'Girl Student'},
+      {day:5,type:'Hospital Incident',culprit:'Boy Student'},
+      {day:7,type:'Murder',culprit:'Police Officer'}
+    ]
+  },
+  {
+    num:13, name:'Never Ending Happy & Sad Story (Card Deck Variant)', creator:'BF + 3G',
+    set:'Basic Tragedy', loops:'4', days:'6', difficulty:5,
+    mainPlot:'gtb_zm', subPlots:['aur_bt_zm','ala_zm'],
+    note:'Alternate realization of Never Ending Happy & Sad Story from a compiled script-card reference — different subplot/cast/incidents than the entry above (adapted from the New Tragedies rulebook). Uses the special "Godly Being" character as the Witch. Character starting locations mostly aren\'t given in that source and are placeholder, except Boss (fixed at School per the source).',
+    chars:[
+      {name:'Girl Student',role:'Person',loc:'City',maxUnease:3},
+      {name:'Rich Student',role:'Loved One',loc:'Shrine',maxUnease:1},
+      {name:'Class Rep',role:'Person',loc:'Hospital',maxUnease:2},
+      {name:'Mystery Boy',role:'Brain',loc:'School',maxUnease:3},
+      {name:'Alien',role:'Person',loc:'City',maxUnease:3},
+      {name:'Godly Being',role:'Witch',loc:'Shrine',maxUnease:3},
+      {name:'Office Worker',role:'Person',loc:'Hospital',maxUnease:3},
+      {name:'Pop Idol',role:'Person',loc:'City',maxUnease:2},
+      {name:'Boss',role:'Conspiracy Theorist',loc:'School',maxUnease:3},
+      {name:'Patient',role:'Lover',loc:'Shrine',maxUnease:3},
+      {name:'Nurse',role:'Person',loc:'Hospital',maxUnease:3},
+    ],
+    incidents:[
+      {day:2,type:'Butterfly Effect',culprit:'Class Rep'},
+      {day:3,type:'Increasing Unease',culprit:'Alien'},
+      {day:4,type:'Missing Person',culprit:'Office Worker'},
+      {day:5,type:'Butterfly Effect',culprit:'Nurse'},
+      {day:6,type:'Missing Person',culprit:'Patient'}
     ]
   },
 ];
