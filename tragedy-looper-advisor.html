@@ -589,6 +589,11 @@ option{background:var(--bg2)}
         <div class="hcard-t">Get Advice</div>
         <div class="hcard-d">Threat analysis &amp; card plays</div>
       </div>
+      <div class="hcard" onclick="go('sfg')">
+        <div class="hcard-i">🎯</div>
+        <div class="hcard-t">Final Guess</div>
+        <div class="hcard-d">Protagonists' last chance to win</div>
+      </div>
     </div>
     <div class="sec">Other</div>
     <div class="hgrid">
@@ -771,6 +776,15 @@ option{background:var(--bg2)}
     <div class="top-r"><div class="ttl">Mastermind Advice</div><div class="sub">Rule-Based Analysis</div></div>
   </div>
   <div class="scrl" id="ac"></div>
+</div>
+
+<!-- ══ FINAL GUESS ══ -->
+<div id="sfg" class="scr">
+  <div class="top">
+    <button class="back" onclick="go('sh')">← Home</button>
+    <div class="top-r"><div class="ttl">Final Guess</div><div class="sub">Protagonists' Last Chance</div></div>
+  </div>
+  <div class="scrl" id="fg-content" style="padding:12px 12px 20px"></div>
 </div>
 
 <!-- ══ RULES REF ══ -->
@@ -2070,6 +2084,7 @@ function go(id){
   if(id==='sb') renderBoard();
   if(id==='sg') renderLog();
   if(id==='sa') renderAdvice();
+  if(id==='sfg') renderFinalGuess();
 }
 function adj(k,d){
   const maps={tL:[1,20],dL:[1,20],cL:[1,G.tL],cD:[1,G.dL]};
@@ -4779,6 +4794,123 @@ function advanceDay(){
 
 // ── Wire 'sg' into navigation ──
 // renderLog is called inside go() via the existing if chain
+
+// ══════════════════════════════════════════════════════════════
+// FINAL GUESS
+// Rules (New Tragedies rulebook p.10 / Z-Man Player's Handbook):
+// Not available for First Steps scripts. Protagonists guess every
+// participating Character's Secret Role (or "Person" if none), one
+// at a time, in an order of their choice. One wrong guess = immediate
+// loss. All correct = Protagonists win.
+// ══════════════════════════════════════════════════════════════
+let FG_ORDER=[];      // char ids confirmed correct so far, in order guessed
+let FG_RESULT=null;   // null | 'win' | 'lose'
+let FG_LOSE_CHAR=null; // id of the character guessed wrong, if lost
+
+function fgIsFirstSteps(){
+  const main=getPlots().find(p=>p.id===G.mainPlot);
+  return main&&main.set==='fs';
+}
+function fgReset(){
+  FG_ORDER=[]; FG_RESULT=null; FG_LOSE_CHAR=null;
+  renderFinalGuess();
+}
+function fgGuess(charId,correct){
+  const c=G.chars.find(ch=>ch.id===charId); if(!c) return;
+  const roleLabel=c.role&&c.role!=='None'&&c.role!=='Person'?c.role:'Person';
+  if(correct){
+    FG_ORDER.push(charId);
+    addLog('sys','🎯',`<b>Final Guess</b> — correct: ${c.name} is ${roleLabel}`,
+      `${FG_ORDER.length}/${G.chars.length} guessed`, c.id, c.name);
+    if(FG_ORDER.length>=G.chars.length){
+      FG_RESULT='win';
+      addLog('sys','🏆','<b>Final Guess complete</b> — Protagonists guessed every role correctly and win the game!','',null,'');
+    }
+  } else {
+    FG_RESULT='lose'; FG_LOSE_CHAR=charId;
+    addLog('sys','💀',`<b>Final Guess failed</b> — wrong on ${c.name} (actually ${roleLabel})`,
+      'Protagonists lose the game.', c.id, c.name);
+  }
+  renderFinalGuess();
+}
+function renderFinalGuess(){
+  const el=document.getElementById('fg-content');
+  if(!el) return;
+  if(!G.chars.length){
+    el.innerHTML=`<div class="card" style="text-align:center;color:var(--t3);padding:30px 15px">
+      No characters loaded. Set up a script first.</div>`;
+    return;
+  }
+  if(fgIsFirstSteps()){
+    el.innerHTML=`<div class="card" style="border-color:#5a1a15;background:var(--rbg)">
+      <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--red2);margin-bottom:6px">No Final Guess in First Steps</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.5">First Steps scripts have no Final Guess. If the Protagonists fail every loop, they've lost — there is no last chance. Switch to a Basic Tragedy (or expansion) script to use this screen.</div>
+    </div>`;
+    return;
+  }
+
+  let html='';
+
+  if(FG_RESULT==='win'){
+    html+=`<div class="card" style="border-color:#1a3a22;background:var(--gbg);text-align:center;padding:24px 15px">
+      <div style="font-size:15px;font-family:'Cinzel',serif;font-weight:700;color:var(--grn);letter-spacing:.04em">🏆 PROTAGONISTS WIN</div>
+      <div style="font-size:13px;color:var(--t2);margin-top:8px">Every Secret Role was guessed correctly. They outsmarted the Mastermind!</div>
+    </div>`;
+  } else if(FG_RESULT==='lose'){
+    const c=G.chars.find(ch=>ch.id===FG_LOSE_CHAR);
+    html+=`<div class="card" style="border-color:#5a1a15;background:var(--rbg);text-align:center;padding:24px 15px">
+      <div style="font-size:15px;font-family:'Cinzel',serif;font-weight:700;color:var(--red2);letter-spacing:.04em">💀 PROTAGONISTS LOSE</div>
+      <div style="font-size:13px;color:var(--t2);margin-top:8px">Wrong guess on ${c?c.name:'?'}. The Mastermind wins the game.</div>
+    </div>`;
+  } else {
+    html+=`<div class="card" style="font-size:12.5px;color:var(--t2);line-height:1.5">
+      Reset the play area first (all Characters alive at their starting position, tokens removed, Extra Gauge to 0). Then, one at a time and in any order, the Protagonists announce a Character's Secret Role. Tap Correct or Wrong below as the Mastermind judges each guess. One wrong guess ends the game as a loss.
+    </div>`;
+  }
+
+  if(FG_RESULT){
+    html+=`<button class="btn-outline" style="width:100%;margin:10px 0" onclick="fgReset()">↺ Start Over</button>`;
+  }
+
+  const guessed=FG_ORDER.map(id=>G.chars.find(c=>c.id===id)).filter(Boolean);
+  const remaining=G.chars.filter(c=>!FG_ORDER.includes(c.id));
+
+  if(guessed.length){
+    html+=`<div class="sec" style="margin-top:14px">Guessed Correctly (${guessed.length}/${G.chars.length})</div>`;
+    guessed.forEach(c=>{
+      const roleLabel=c.role&&c.role!=='None'&&c.role!=='Person'?c.role:'Person';
+      html+=`<div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 13px">
+        <span style="color:var(--grn);font-size:16px">✓</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Cinzel',serif;font-size:12.5px;color:var(--t)">${c.name}</div>
+        </div>
+        <span class="role-chip req">${roleLabel}</span>
+      </div>`;
+    });
+  }
+
+  if(!FG_RESULT&&remaining.length){
+    html+=`<div class="sec" style="margin-top:14px">Remaining (${remaining.length})</div>`;
+    remaining.forEach(c=>{
+      const roleLabel=c.role&&c.role!=='None'&&c.role!=='Person'?c.role:'Person';
+      html+=`<div class="card" style="padding:11px 13px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+          ${CHAR_PORTRAITS[c.name]?`<img src="${CHAR_PORTRAITS[c.name]}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0"/>`:''}
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--t)">${c.name}</div>
+            <div style="font-size:10.5px;color:var(--t3)">Actual role: ${roleLabel}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button style="background:var(--gbg);border:.5px solid #1a3a22;border-radius:8px;color:var(--grn);font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:.05em;padding:10px;cursor:pointer" onclick="fgGuess(${c.id},true)">✓ Correct</button>
+          <button style="background:var(--rbg);border:.5px solid #5a1a15;border-radius:8px;color:var(--red2);font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:.05em;padding:10px;cursor:pointer" onclick="fgGuess(${c.id},false)">✗ Wrong</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML=html;
+}
 </script>
 <!-- ══ CHARACTER PORTRAIT MODAL ══ -->
 <div id="portrait-modal" onclick="closePortraitModal()" style="
