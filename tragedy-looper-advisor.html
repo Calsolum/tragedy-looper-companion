@@ -239,11 +239,13 @@ option{background:var(--bg2)}
 /* CHARACTER CARD ON BOARD */
 .char-card{
   background:var(--bg2);border:.5px solid var(--bdr2);border-radius:7px;
-  padding:7px 8px;margin-bottom:5px;
+  margin-bottom:5px;display:flex;align-items:stretch;overflow:hidden;
 }
 .char-card.dead{opacity:.45;border-style:dashed}
 .char-card.at-limit{border-color:var(--red2);background:var(--rbg)}
 .char-card.near-limit{border-color:var(--amb)}
+.char-card-body{flex:1;min-width:0;padding:7px 8px}
+.char-card-portrait{width:74px;flex-shrink:0;object-fit:cover;cursor:pointer;align-self:stretch;display:block}
 .char-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
 .char-card-name{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--t)}
 .char-card-role{font-size:9.5px;color:var(--t3);font-family:'Cinzel',serif;letter-spacing:.04em;
@@ -3210,11 +3212,12 @@ function renderBoard(){
           onmouseleave="hideCharPortrait()"
           style="cursor:${c.dead?'default':'grab'}">`;
 
+        html+=`<div class="char-card-body">`;
+
         // Header: drag handle + name + role + controls
         html+=`<div class="char-card-top" style="margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0">
             ${!c.dead?`<span class="drag-handle" title="Drag to move">⠿</span>`:''}
-            ${CHAR_PORTRAITS[c.name]?`<img src="${CHAR_PORTRAITS[c.name]}" alt="${c.name||''}" title="View character portrait" onclick="openPortraitModal(${jsAttr(c.name)},${jsAttr(roleDisplay||'Person')})" style="width:34px;aspect-ratio:5/7;object-fit:cover;border-radius:4px;border:.5px solid var(--bdr2);flex-shrink:0;cursor:pointer">`:''}
             <div style="min-width:0">
               <div class="char-card-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name||'?'}</div>
               ${roleDisplay?`<div class="char-card-role">${roleDisplay}</div>`:''}
@@ -3257,6 +3260,10 @@ function renderBoard(){
           if(histPips) html+=histPips;
         } else {
           html+=`<div style="font-size:10px;color:var(--t3);font-family:'Cinzel',serif;letter-spacing:.08em;margin-top:2px">DEAD — tap ✓ to revive</div>`;
+        }
+        html+=`</div>`; // char-card-body
+        if(CHAR_PORTRAITS[c.name]){
+          html+=`<img src="${CHAR_PORTRAITS[c.name]}" alt="${c.name||''}" title="View character portrait" onclick="openPortraitModal(${jsAttr(c.name)},${jsAttr(roleDisplay||'Person')})" class="char-card-portrait">`;
         }
         html+=`</div>`; // char-card
       });
