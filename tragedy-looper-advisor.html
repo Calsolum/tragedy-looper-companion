@@ -3212,8 +3212,9 @@ function renderBoard(){
 
         // Header: drag handle + name + role + controls
         html+=`<div class="char-card-top" style="margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
             ${!c.dead?`<span class="drag-handle" title="Drag to move">⠿</span>`:''}
+            ${CHAR_PORTRAITS[c.name]?`<img src="${CHAR_PORTRAITS[c.name]}" alt="${c.name||''}" title="View character portrait" onclick="openPortraitModal(${jsAttr(c.name)},${jsAttr(roleDisplay||'Person')})" style="width:34px;aspect-ratio:5/7;object-fit:cover;border-radius:4px;border:.5px solid var(--bdr2);flex-shrink:0;cursor:pointer">`:''}
             <div style="min-width:0">
               <div class="char-card-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name||'?'}</div>
               ${roleDisplay?`<div class="char-card-role">${roleDisplay}</div>`:''}
@@ -3228,7 +3229,6 @@ function renderBoard(){
             </select>`:''}
             <button class="card-play-btn" onclick="openCardPlayModal(${c.id})" title="Play a card on this character">🃏</button>
             ${pendingCountFor('char',c.id)?`<span class="log-tag sys" title="Face-down cards awaiting reveal">🂠${pendingCountFor('char',c.id)}</span>`:''}
-            ${CHAR_PORTRAITS[c.name]?`<button class="portrait-btn" onclick="openPortraitModal(${jsAttr(c.name)},${jsAttr(roleDisplay||'Person')})" title="View character portrait">🖼</button>`:''}
             ${!c.dead&&(GW_ABILITIES[c.name]||[]).length>0?`<button class="gw-btn${(c.gw||0)>=(GW_ABILITIES[c.name][0].gwNeeded)?'':' gw-btn-low'}"
               onclick="openGWModal(${c.id})" title="Use Goodwill Ability">
               ♥
@@ -4901,7 +4901,7 @@ function renderFinalGuess(){
       const roleLabel=c.role&&c.role!=='None'&&c.role!=='Person'?c.role:'Person';
       html+=`<div class="card" style="padding:11px 13px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-          ${CHAR_PORTRAITS[c.name]?`<img src="${CHAR_PORTRAITS[c.name]}" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0"/>`:''}
+          ${CHAR_PORTRAITS[c.name]?`<img src="${CHAR_PORTRAITS[c.name]}" style="width:34px;aspect-ratio:5/7;border-radius:6px;object-fit:cover;flex-shrink:0"/>`:''}
           <div style="flex:1;min-width:0">
             <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--t)">${c.name}</div>
             <div style="font-size:10.5px;color:var(--t3)">Actual role: ${roleLabel}</div>
@@ -4936,9 +4936,9 @@ function renderFinalGuess(){
     ">✕</button>
     <!-- Portrait image -->
     <img id="portrait-modal-img" src="" alt="" style="
-      width:min(260px, 70vw);
+      width:min(230px, 62vw);
       height:auto;
-      aspect-ratio:3/4;
+      aspect-ratio:5/7;
       border-radius:16px;
       border:2px solid var(--amb);
       display:block;
