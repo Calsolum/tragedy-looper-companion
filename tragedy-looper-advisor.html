@@ -1942,6 +1942,11 @@ const PRELOADED_SCRIPTS_ZM = [
 // ══════════════════════════════════════════════════════════════
 // STATE & CONSTANTS
 // ══════════════════════════════════════════════════════════════
+// Safely embed a JS value as an argument inside a double-quoted HTML
+// attribute (e.g. onclick="fn(${jsAttr(name)})") — JSON.stringify alone
+// produces a double-quoted string, which would prematurely close the
+// surrounding HTML attribute.
+function jsAttr(v){ return JSON.stringify(v).replace(/"/g,'&quot;'); }
 const LOCS=['City','Shrine','Hospital','School'];
 const LM={City:3,Shrine:2,Hospital:2,School:2};
 const INCIDENTS_NT=['Homicide','Suicide','Faraway Murder','Transfer Friendship','Missing Person','Hospital Horror','Increasing Unease','Butterfly Effect','Foul Evil'];
@@ -3201,7 +3206,7 @@ function renderBoard(){
           ondragstart="onDragStart(event,${c.id})"
           ondragend="onDragEnd(event,${c.id})"
           ontouchstart="onTouchStart(event,${c.id})"
-          onmouseenter="showCharPortrait(this,${JSON.stringify(c.name)})"
+          onmouseenter="showCharPortrait(this,${jsAttr(c.name)})"
           onmouseleave="hideCharPortrait()"
           style="cursor:${c.dead?'default':'grab'}">`;
 
@@ -3223,7 +3228,7 @@ function renderBoard(){
             </select>`:''}
             <button class="card-play-btn" onclick="openCardPlayModal(${c.id})" title="Play a card on this character">🃏</button>
             ${pendingCountFor('char',c.id)?`<span class="log-tag sys" title="Face-down cards awaiting reveal">🂠${pendingCountFor('char',c.id)}</span>`:''}
-            ${CHAR_PORTRAITS[c.name]?`<button class="portrait-btn" onclick="openPortraitModal(${JSON.stringify(c.name)},${JSON.stringify(roleDisplay||'Person')})" title="View character portrait">🖼</button>`:''}
+            ${CHAR_PORTRAITS[c.name]?`<button class="portrait-btn" onclick="openPortraitModal(${jsAttr(c.name)},${jsAttr(roleDisplay||'Person')})" title="View character portrait">🖼</button>`:''}
             ${!c.dead&&(GW_ABILITIES[c.name]||[]).length>0?`<button class="gw-btn${(c.gw||0)>=(GW_ABILITIES[c.name][0].gwNeeded)?'':' gw-btn-low'}"
               onclick="openGWModal(${c.id})" title="Use Goodwill Ability">
               ♥
