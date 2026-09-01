@@ -2060,7 +2060,9 @@ function pushUndo(label){
 function undoLast(){
   const snap=UNDO_STACK.pop();
   if(!snap) return;
+  const currentLoopNotes=G.loopNotes; // Time Spiral notes are never part of undo history — preserve them regardless of when the snapshot was taken
   Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,snap.G);
+  G.loopNotes=currentLoopNotes;
   Object.keys(GW_USED).forEach(k=>delete GW_USED[k]); Object.assign(GW_USED,snap.GW_USED);
   Object.keys(CARD_USED).forEach(k=>delete CARD_USED[k]); Object.assign(CARD_USED,snap.CARD_USED);
   DAY_CARDS.mm=snap.DAY_CARDS.mm; DAY_CARDS.prot=snap.DAY_CARDS.prot;
