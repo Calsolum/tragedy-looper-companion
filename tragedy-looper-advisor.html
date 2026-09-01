@@ -597,6 +597,11 @@ option{background:var(--bg2)}
         <div class="hcard-t">Final Guess</div>
         <div class="hcard-d">Protagonists' last chance to win</div>
       </div>
+      <div class="hcard" onclick="go('sts')">
+        <div class="hcard-i">🌀</div>
+        <div class="hcard-t">Time Spiral</div>
+        <div class="hcard-d">Notes carried between loops</div>
+      </div>
     </div>
     <div class="sec">Other</div>
     <div class="hgrid">
@@ -837,6 +842,15 @@ option{background:var(--bg2)}
     <div class="top-r"><div class="ttl">Final Guess</div><div class="sub">Protagonists' Last Chance</div></div>
   </div>
   <div class="scrl" id="fg-content" style="padding:12px 12px 20px"></div>
+</div>
+
+<!-- ══ TIME SPIRAL ══ -->
+<div id="sts" class="scr">
+  <div class="top">
+    <button class="back" onclick="go('sh')">← Home</button>
+    <div class="top-r"><div class="ttl">Time Spiral</div><div class="sub">Notes Carried Between Loops</div></div>
+  </div>
+  <div class="scrl" id="ts-content" style="padding:12px 12px 20px"></div>
 </div>
 
 <!-- ══ RULES REF ══ -->
@@ -2015,7 +2029,8 @@ const G={
   loc:{City:0,Shrine:0,Hospital:0,School:0},
   locMax:{City:3,Shrine:2,Hospital:2,School:2},  // per-location intrigue ceiling; configurable per script
   wcProgress:{},
-  patientUnlocked:false  // set true when Doctor's ♥♥♥ ability fires this loop
+  patientUnlocked:false,  // set true when Doctor's ♥♥♥ ability fires this loop
+  loopNotes:{}  // loop number → free-text notes carried forward as Protagonist "memory" (Time Spiral screen)
 };
 
 // ── UNDO STACK ──
@@ -2098,6 +2113,7 @@ function loadFromSlot(n){
   G.loc={City:0,Shrine:0,Hospital:0,School:0};
   G.locMax={...LM,...(s.locMax||{})}; // migrate old saves without locMax
   G.wcProgress={};
+  G.loopNotes={};
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
   syncLocMaxUI();
@@ -2155,6 +2171,7 @@ function importGameState(file){
     }
     Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,payload.G);
     if(!G.locMax) G.locMax={...LM}; // migrate exports made before locMax existed
+    if(!G.loopNotes) G.loopNotes={}; // migrate exports made before the Time Spiral notes existed
     GAME_LOG.length=0; GAME_LOG.push(...(payload.gameLog||[]));
     Object.keys(GW_USED).forEach(k=>delete GW_USED[k]); Object.assign(GW_USED,payload.gwUsed||{});
     Object.keys(CARD_USED).forEach(k=>delete CARD_USED[k]); Object.assign(CARD_USED,payload.cardUsed||{});
@@ -2189,6 +2206,7 @@ function loadPreloaded(idx){
   G.loc={City:0,Shrine:0,Hospital:0,School:0};
   G.locMax={...LM};
   G.wcProgress={};
+  G.loopNotes={};
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
   syncLocMaxUI();
@@ -2205,7 +2223,7 @@ function selVer(v){
   document.getElementById('vc-zm').classList.toggle('sel',v==='zm');
 }
 function confirmVer(){
-  G.mainPlot=null; G.subPlots=[]; G.chars=[]; G.incidents=[]; G.locMax={...LM};
+  G.mainPlot=null; G.subPlots=[]; G.chars=[]; G.incidents=[]; G.locMax={...LM}; G.loopNotes={};
   go('sh'); updateVerLabels();
 }
 function updateVerLabels(){
@@ -2249,6 +2267,7 @@ function go(id){
   if(id==='sg') renderLog();
   if(id==='sa') renderAdvice();
   if(id==='sfg') renderFinalGuess();
+  if(id==='sts') renderTimeSpiral();
 }
 function adj(k,d){
   const maps={tL:[1,20],dL:[1,20],cL:[1,G.tL],cD:[1,G.dL]};
@@ -5153,6 +5172,27 @@ function renderFinalGuess(){
   }
 
   el.innerHTML=html;
+}
+
+// ── TIME SPIRAL (inter-loop notes) ──
+function renderTimeSpiral(){
+  const el=document.getElementById('ts-content');
+  if(!G.loopNotes) G.loopNotes={};
+  let html=`<p style="font-size:11.5px;color:var(--t3);margin:0 0 12px">The Protagonists carry their memories forward across the time loop. Jot down deductions, suspicions, and plans for next time — nothing here is graded or auto-checked, it's just a scratchpad that survives loop advances.</p>`;
+  for(let n=1;n<=G.tL;n++){
+    const isCurrent=n===G.cL;
+    const note=(G.loopNotes[n]||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html+=`<div class="card" style="margin-bottom:10px${isCurrent?';border-color:var(--amb)':''}">
+      <div style="font-family:'Cinzel',serif;font-size:12.5px;font-weight:600;letter-spacing:.04em;margin-bottom:6px;color:${isCurrent?'var(--amb)':'var(--t)'}">Loop ${n}${isCurrent?' — current':''}</div>
+      <textarea data-loop="${n}" onchange="setLoopNote(${n},this.value)" placeholder="Deductions, suspicions, plans for next loop…"
+        style="width:100%;min-height:70px;background:var(--bg4);border:.5px solid var(--bdr);border-radius:6px;color:var(--t);font-family:inherit;font-size:12.5px;padding:8px;resize:vertical;box-sizing:border-box">${note}</textarea>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+function setLoopNote(n,val){
+  if(!G.loopNotes) G.loopNotes={};
+  G.loopNotes[n]=val;
 }
 </script>
 <!-- ══ CHARACTER PORTRAIT MODAL ══ -->
