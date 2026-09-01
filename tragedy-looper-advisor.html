@@ -753,6 +753,7 @@ option{background:var(--bg2)}
         <button class="nb" onclick="adj('cD',1)">+</button>
       </div>
     </div>
+    <button class="ghost undo-btn" style="margin-top:6px;opacity:.4;pointer-events:none" title="Nothing to undo yet" onclick="undoLast()">↺ Undo Last Action</button>
 
     <!-- BOARD VIEW BUTTON -->
     <button class="board-view-btn" onclick="go('sb')">
@@ -783,6 +784,7 @@ option{background:var(--bg2)}
   </div>
   <div class="scrl" id="board-container" style="padding:12px 12px 80px"></div>
   <div style="position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:.5px solid var(--bdr);padding:10px 15px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-outline undo-btn" style="padding:11px;flex:0 0 auto;opacity:.4;pointer-events:none" title="Nothing to undo yet" onclick="undoLast()">↺ Undo</button>
     <button class="btn-outline" id="reveal-cards-btn" style="padding:11px;flex:1;min-width:150px" onclick="openRevealModal()">🂠 Reveal Cards</button>
     <button class="btn" style="padding:11px;flex:1;min-width:120px" onclick="openNextDayModal()">Next Day →</button>
     <button class="btn-outline" style="padding:11px;flex:1;min-width:100px" onclick="calcAdvice()">Advice</button>
@@ -2005,6 +2007,49 @@ const G={
   patientUnlocked:false  // set true when Doctor's ♥♥♥ ability fires this loop
 };
 
+// ── UNDO STACK ──
+// Snapshots G plus the runtime trackers that gameplay actions mutate (GW_USED, CARD_USED,
+// DAY_CARDS, PENDING_CARDS) and the game log's length, so an undo can also roll back any log
+// entries the undone action wrote. In-memory only (not persisted) — resets on page reload,
+// same as the other runtime trackers. Scoped to play-time actions (board/day/card/GW/incident/
+// loop-day moves); Setup-screen editing and Final Guess are not wrapped.
+const UNDO_STACK=[];
+const UNDO_MAX=20;
+function pushUndo(label){
+  UNDO_STACK.push({
+    G:JSON.parse(JSON.stringify(G)),
+    GW_USED:JSON.parse(JSON.stringify(GW_USED)),
+    CARD_USED:JSON.parse(JSON.stringify(CARD_USED)),
+    DAY_CARDS:JSON.parse(JSON.stringify(DAY_CARDS)),
+    PENDING_CARDS:JSON.parse(JSON.stringify(PENDING_CARDS)),
+    logLen:GAME_LOG.length,
+    label:label||'Action'
+  });
+  if(UNDO_STACK.length>UNDO_MAX) UNDO_STACK.shift();
+  updateUndoBtn();
+}
+function undoLast(){
+  const snap=UNDO_STACK.pop();
+  if(!snap) return;
+  Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,snap.G);
+  Object.keys(GW_USED).forEach(k=>delete GW_USED[k]); Object.assign(GW_USED,snap.GW_USED);
+  Object.keys(CARD_USED).forEach(k=>delete CARD_USED[k]); Object.assign(CARD_USED,snap.CARD_USED);
+  DAY_CARDS.mm=snap.DAY_CARDS.mm; DAY_CARDS.prot=snap.DAY_CARDS.prot;
+  PENDING_CARDS.length=0; PENDING_CARDS.push(...snap.PENDING_CARDS);
+  GAME_LOG.length=snap.logLen;
+  updateUndoBtn();
+  const activeScreen=document.querySelector('.scr.on');
+  if(activeScreen) go(activeScreen.id);
+}
+function updateUndoBtn(){
+  const top=UNDO_STACK[UNDO_STACK.length-1];
+  document.querySelectorAll('.undo-btn').forEach(btn=>{
+    btn.style.opacity=top?'1':'.4';
+    btn.style.pointerEvents=top?'':'none';
+    btn.title=top?`Undo: ${top.label}`:'Nothing to undo yet';
+  });
+}
+
 // Save slots in localStorage
 function getSlots(){
   try{return JSON.parse(localStorage.getItem('tl_slots')||'[null,null,null]');}
@@ -2773,8 +2818,8 @@ function renderDay(){
   note.textContent='Intrigue-based conditions auto-calculate. Deaths/incident fires use +/− buttons.';
   wt.appendChild(note);
 }
-function adjWC(id,d){if(!G.wcProgress[id])G.wcProgress[id]={val:0};G.wcProgress[id].val=Math.max(0,(G.wcProgress[id].val||0)+d);renderDay();}
-function aL(loc,d){G.loc[loc]=Math.max(0,Math.min(G.locMax[loc]+2,(G.loc[loc]||0)+d));renderDay();}
+function adjWC(id,d){pushUndo(`Adjust win condition ${d>0?'+':''}${d}`);if(!G.wcProgress[id])G.wcProgress[id]={val:0};G.wcProgress[id].val=Math.max(0,(G.wcProgress[id].val||0)+d);renderDay();}
+function aL(loc,d){pushUndo(`Adjust ${loc} intrigue ${d>0?'+':''}${d}`);G.loc[loc]=Math.max(0,Math.min(G.locMax[loc]+2,(G.loc[loc]||0)+d));renderDay();}
 
 // ── WC CALCULATION ──
 function getWCProgress(wc){
@@ -3008,6 +3053,7 @@ function bSetLoc(charId, loc){
   if(forbidden.includes(loc)){
     // Patient special case — Doctor's ability unlocks them this loop
     if(c.name==='Patient'&&G.patientUnlocked){
+      pushUndo(`Move ${c.name} to ${loc}`);
       uc(charId,'loc',loc);
       addLog('effect','🏥',`<b>Patient moves</b> to ${loc}`,`Allowed via Doctor's Goodwill ability`);
       renderBoard();
@@ -3016,11 +3062,13 @@ function bSetLoc(charId, loc){
     // Show forbidden modal with override option
     const cond=FORBIDDEN_COND[c.name]||null;
     showForbidModal(c.name, loc, cond, ()=>{
+      pushUndo(`Move ${c.name} to ${loc} (forbidden override)`);
       uc(charId,'loc',loc);
       renderBoard();
     });
     return;
   }
+  pushUndo(`Move ${c.name} to ${loc}`);
   uc(charId,'loc',loc);
   renderBoard();
 }
@@ -3045,15 +3093,18 @@ function onDragOverForbid(e, locKey){
 }
 function bAdj(charId, field, delta){
   const c=G.chars.find(c=>c.id===charId); if(!c) return;
+  pushUndo(`Adjust ${c.name} ${field} ${delta>0?'+':''}${delta}`);
   const maxMap={unease:c.maxUnease||2, intr:10, gw:10};
   c[field]=Math.max(0,Math.min(maxMap[field]||10,(c[field]||0)+delta));
   renderBoard();
 }
 function bToggleDead(charId){
   const c=G.chars.find(c=>c.id===charId); if(!c) return;
+  pushUndo(`${c.dead?'Revive':'Mark dead'} ${c.name}`);
   c.dead=!c.dead; renderBoard();
 }
 function bAdjLoc(loc, delta){
+  pushUndo(`Adjust ${loc} intrigue ${delta>0?'+':''}${delta}`);
   G.loc[loc]=Math.max(0,Math.min(G.locMax[loc]+2,(G.loc[loc]||0)+delta));
   renderBoard();
 }
@@ -3081,8 +3132,8 @@ function renderCharHistoryPips(charId){
 
   return `<div class="char-history-row" id="ch-${charId}">${pips.join('')}</div>`;
 }
-function bAdjLoop(delta){ adj('cL',delta); gwClearLoop(); cardClearLoop(); renderBoard(); }
-function bAdjDay(delta){ adj('cD',delta); cardClearDay(); renderBoard(); }
+function bAdjLoop(delta){ pushUndo(`Adjust loop ${delta>0?'+':''}${delta}`); adj('cL',delta); gwClearLoop(); cardClearLoop(); renderBoard(); }
+function bAdjDay(delta){ pushUndo(`Adjust day ${delta>0?'+':''}${delta}`); adj('cD',delta); cardClearDay(); renderBoard(); }
 function bAdjWC(id, delta){ adjWC(id,delta); renderBoard(); }
 
 // ── Drag & Drop state ──
@@ -3663,6 +3714,8 @@ function _doApplyGW(charId, abilityIdx, force){
 
   const gw=c.gw||0;
   if(!force && gw<ab.gwNeeded) return; // shouldn't happen, but guard
+
+  pushUndo(`Use GW ability: ${ab.label} (${c.name})`);
 
   // Mark once-per-loop as used
   if(ab.oncePer==='loop') GW_USED[charId+'_'+abilityIdx]=true;
@@ -4445,6 +4498,8 @@ function showDayLimitWarning(sideLabel, dayCount, card, onConfirm){
 function _doCardPlay(charId, cardId, card){
   const c=G.chars.find(c=>c.id===charId); if(!c) return;
 
+  pushUndo(`Play ${card.label} on ${c.name}`);
+
   // Track once-per-loop use
   CARD_USED[cardId]=(CARD_USED[cardId]||0)+1;
 
@@ -4525,6 +4580,7 @@ function applyLocCardPlay(locKey, cardId){
   _doLocCardPlay(locKey, cardId, card);
 }
 function _doLocCardPlay(locKey, cardId, card){
+  pushUndo(`Play ${card.label} on ${locKey}`);
   CARD_USED[cardId]=(CARD_USED[cardId]||0)+1;
   const side=card.tag==='mm'?'mm':'prot';
   DAY_CARDS[side]=(DAY_CARDS[side]||0)+1;
@@ -4660,6 +4716,7 @@ function _resolveOnePendingCard(p, cancelledIds){
 
 function resolvePendingCards(){
   if(!PENDING_CARDS.length) return;
+  pushUndo(`Reveal ${PENDING_CARDS.length} card${PENDING_CARDS.length===1?'':'s'}`);
   const cancelledIds=pendingCancelledIds();
   orderedPendingCards().forEach(({p})=>_resolveOnePendingCard(p, cancelledIds));
   pendingClearDay();
@@ -4863,6 +4920,7 @@ function confirmSerialKill(skId, victimId){
   const sk=G.chars.find(c=>c.id===skId);
   const victim=G.chars.find(c=>c.id===victimId);
   if(!victim) return;
+  pushUndo(`Serial Killer kills ${victim.name}`);
   victim.dead=true;
   addLog('effect','💀',`<b>Serial Killer</b> kills ${victim.name}`,`${sk?.name||'SK'} at ${victim.loc} — ${victim.name} is now dead`);
   openNextDayModal(); // refresh modal
@@ -4871,6 +4929,7 @@ function confirmSerialKill(skId, victimId){
 function confirmIncidentFired(incId){
   const inc=G.incidents.find(i=>String(i.id)===String(incId));
   if(!inc) return;
+  pushUndo(`Mark incident fired: ${inc.type}`);
   inc.fired=(inc.fired||0)+1;
   addLog('effect','⚡',`<b>Incident fires</b>: ${inc.type}`,`Day ${G.cD} — culprit: ${inc.culprit||'?'}`);
   // Auto-flag any active win condition (e.g. Butterfly Effect) tied to this incident type firing —
@@ -4886,6 +4945,7 @@ function confirmIncidentFired(incId){
 function advanceDay(){
   document.getElementById('next-day-modal').style.display='none';
   const prevDay=G.cD, prevLoop=G.cL;
+  pushUndo(G.cD<G.dL?`Advance to Day ${G.cD+1}`:`Advance to Loop ${Math.min(G.cL+1,G.tL)}`);
 
   if(G.cD<G.dL){
     addLog('sys','📅',`<b>Day ${G.cD} ended</b> → Day ${G.cD+1}`,`Loop ${G.cL}`);
