@@ -9,11 +9,11 @@
 
 A single-file HTML/CSS/JavaScript web app (zero dependencies, ~335KB) implementing a near-complete digital Mastermind companion for **Tragedy Looper: New Tragedies (WizKids 2022)**, with full secondary support for the **Z-Man Games (2014)** edition — including its **Cosmic Evil** expansion (Prime Evil / Cosmic Mythology tragedy sets).
 
-Started as a static player aid, and has grown into a fully interactive digital board: drag-and-drop character movement, facedown card play with a proper reveal/resolution phase (matching real tabletop rules), automatic win-condition tracking, a filterable game log, a Final Guess end-game screen, original character portrait art, and an optional local-scan portrait override for private builds.
+Started as a static player aid, and has grown into a fully interactive digital board: drag-and-drop character movement, facedown card play with a proper reveal/resolution phase (matching real tabletop rules), automatic win-condition tracking (including auto-flagging incident-triggered conditions like Butterfly Effect), a filterable game log, a Final Guess end-game screen, original character portrait art with an optional local-scan override, a Time Spiral inter-loop notes screen, live script validation while building a custom script, an undo stack for play-time actions, and full mid-game state export/import.
 
 **Output file:** `tragedy-looper-advisor.html`
 **Redirect file:** `index.html` — GitHub Pages root redirect to the app (see *Hosting*, below)
-**Architecture:** All code lives in one self-contained HTML file (5,020 lines, ~343KB). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
+**Architecture:** All code lives in one self-contained HTML file (5,300 lines, ~358KB). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
 
 **Live URL (GitHub Pages):** `https://calsolum.github.io/tragedy-looper-companion/` — confirmed working by the user. Note the repo itself has since been renamed/moved to `Calsolum/tragedy-looper-companion` (GitHub reports this automatically on push to the old `Calsolum/hello-world` remote; `git push` still succeeds via the redirect).
 
@@ -43,7 +43,8 @@ tragedy-looper-advisor.html
 | `sb` | Board View | **Primary play screen** — interactive drag/drop board |
 | `sg` | Game Log | Filterable chronological event log |
 | `sa` | Advice | Rule-based threat analysis and card recommendations |
-| `sfg` | Final Guess | End-game role-guessing screen (new — see below) |
+| `sfg` | Final Guess | End-game role-guessing screen |
+| `sts` | Time Spiral | Free-text notes per loop, carried forward as Protagonist "memory" (new — see below) |
 | `sr` | Rules Reference | Cards, incidents, roles reference |
 
 ---
@@ -61,8 +62,10 @@ const G = {
   chars: [],                // array of character objects
   incidents: [],            // array of incident objects
   loc: {City:0, Shrine:0, Hospital:0, School:0},  // intrigue per location
+  locMax: {City:3, Shrine:2, Hospital:2, School:2}, // per-location intrigue ceiling, configurable per script
   wcProgress: {},           // manual WC tracking: wcId → {val: n}
   patientUnlocked: false,   // set true by Doctor's ♥♥♥ GW ability this loop
+  loopNotes: {},            // loop number → free-text notes (Time Spiral screen)
 };
 ```
 
@@ -214,10 +217,46 @@ The app can optionally load portraits from a local `portraits/` folder placed ne
 | `G.patientUnlocked` | Boolean | Loop change |
 | `GAME_LOG` | Array | Manual clear only |
 | `G.wcProgress` | `{}` wcId → {val} | Loop change |
+| `UNDO_STACK` | Array of state snapshots, cap 20 | Never auto-cleared during play; cleared by `importGameState()` |
+| `G.loopNotes` | `{}` loop number → note text | **Never resets on loop change** (persists across loops by design — see *Time Spiral Screen*); cleared only on `loadPreloaded()`/`loadFromSlot()`/`confirmVer()` |
 
 Clear functions: `gwClearLoop()`, `cardClearLoop()`, `cardClearDay()`, `pendingClearDay()`. Triggered by `bAdjLoop()`, `bAdjDay()`, `advanceDay()`.
 
 Location card plays (`mm_li1a`, `mm_li2`, `p_fi_loc`) are now correctly subject to the same daily/once-per-loop limit tracking as character cards — this was a confirmed gap in the prior version of this document and has been fixed.
+
+---
+
+## Undo Stack
+
+`UNDO_STACK` (in-memory only, not persisted) holds up to `UNDO_MAX` (20) snapshots. `pushUndo(label)` deep-clones `G` plus the runtime trackers gameplay actions mutate (`GW_USED`, `CARD_USED`, `DAY_CARDS`, `PENDING_CARDS`) and `GAME_LOG`'s current length, and is called at the start of every play-time mutation: `bAdj`, `bSetLoc` (all three exit paths), `bToggleDead`, `bAdjLoc`, `bAdjLoop`, `bAdjDay`, `aL`, `adjWC`, a GW ability use (`_doApplyGW`), a card play (`_doCardPlay`/`_doLocCardPlay`), `resolvePendingCards`, `confirmSerialKill`, `confirmIncidentFired`, and `advanceDay`.
+
+`undoLast()` pops the top snapshot and restores `G` (via `Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,snap.G)` — `G` is a `const` reference shared everywhere, so its properties are replaced in place rather than reassigning the binding), the trackers, and truncates `GAME_LOG` back to the snapshot's length (so any log entries the undone action wrote are removed too) — then calls `go()` on whichever screen is currently active to re-render from the restored state. `updateUndoBtn()` keeps every element with class `.undo-btn` (one in the Board footer, one on the Day Input screen) in sync with the stack's top entry — dimmed/non-interactive when empty, with a `title` tooltip naming what would be undone.
+
+**Deliberately out of scope:** Setup-screen editing (building/editing a script) and Final Guess are not wrapped — this keeps the stack from filling with script-authoring noise and avoids the extra complexity of also snapshotting Final Guess's separate module-level state (`FG_ORDER`/`FG_RESULT`/`FG_LOSE_CHAR`).
+
+---
+
+## Full Game Export / Import
+
+Distinct from the 3 save slots (`saveToSlot`/`loadFromSlot`, unchanged — script/setup only: version, loop/day counts, plot IDs, characters, incidents, `locMax`). `exportGameState()`/`importGameState(file)` capture the complete **mid-game** state — everything in `G` (including `cL`/`cD`, `G.loc`, `G.wcProgress`, `G.loopNotes`) plus `GAME_LOG`, `GW_USED`, `CARD_USED`, `DAY_CARDS`, and `PENDING_CARDS` — as one downloadable JSON file, tagged with a `schema`/`schemaVersion` marker (`FULL_SAVE_SCHEMA = 'tragedy-looper-full-save'`).
+
+Export triggers a browser download via a Blob + temporary `<a download>` element, named from the script name and current loop/day. Import reads an uploaded file via `FileReader`, rejects anything that isn't valid JSON or doesn't carry the schema marker (alert + state left untouched either way), confirms with the user (destructive replace), then restores everything and clears `UNDO_STACK` (it no longer corresponds to the restored state). Falls back to `LM` defaults / an empty `{}` for `locMax`/`loopNotes` on files exported before those fields existed.
+
+Home screen cards: "Export Full Game" (⬇️) and "Import Full Game" (⬆️, wired to a hidden `<input type="file" id="import-state-input">`).
+
+---
+
+## Time Spiral Screen (inter-loop notes)
+
+New `sts` screen. `renderTimeSpiral()` renders one card per loop (1 through `G.tL`), each with a `<textarea>` bound via `onchange` (not `oninput`, to avoid re-render/cursor issues on every keystroke — same pattern used elsewhere for free-text fields) to `G.loopNotes[loopNumber]`, via `setLoopNote(n,val)`. The current loop (`G.cL`) is highlighted amber. This is a plain scratchpad — nothing here is validated or auto-checked against game state; it exists because Tragedy Looper's core conceit (Protagonists carry memory across loops even though the board resets) previously had nowhere to be recorded in-app. See the *Runtime Trackers* table above for why `G.loopNotes` deliberately does not reset on loop change, unlike `G.wcProgress`/`G.loc`.
+
+---
+
+## Script Validation (Setup screen, "custom script builder")
+
+`renderScriptValidation()` renders into `#script-validation` on the Setup screen (`ss`), sanity-checking the script being built purely from data already available to the app — `getActivePlots()`'s role requirements, `G.chars`, `G.incidents`, `G.dL` — **not** a numeric difficulty score (see *Data Sourcing Discipline* below for why that part of the original "custom script builder" idea was intentionally left unbuilt). Checks: no Main Plot selected / >2 subplots; every role required by the active plots has at least one character assigned (handles `"... (must be a Girl)"` role-name variants by comparing base role names too); duplicate or blank character names; an incident scheduled past the loop's day length; and soft warnings (character count outside 5–8, no incidents scheduled, an incident missing its culprit) that don't block saving.
+
+Wired into every function that already mutates the relevant state — `uc()`/`ui_fn()` (character/incident field edits), `renderChars()`/`renderIncs()` (add/delete), `renderPlotLists()` (plot selection), and `adj()` for `dL` changes specifically. `uc`/`ui_fn` don't otherwise touch the character/incident list DOM (`#cl`/`#il`), so calling `renderScriptValidation()` from inside them — which only ever writes to the separate `#script-validation` container — doesn't disturb focus on whatever input the mastermind is mid-edit on.
 
 ---
 
@@ -249,7 +288,11 @@ Location card plays (`mm_li1a`, `mm_li2`, `p_fi_loc`) are now correctly subject 
 │    CITY     │   SCHOOL    │
 └─────────────┴─────────────┘
 ```
-Each zone: `id="lz-{locKey}"`, `data-loc="{locKey}"`.
+Each zone: `id="lz-{locKey}"`, `data-loc="{locKey}"`. `.loc-zone` has `max-height:48vh;overflow-y:auto;overscroll-behavior:contain` — a location with many characters (more likely on a small/mobile screen) scrolls internally instead of stretching the whole `board-grid` row and pushing the other three zones out of view; zones with few characters are unaffected since `max-height` only kicks in once content actually exceeds it. `locOrder`'s `maxI` values (the "▲x/y" badge) now read from `G.locMax[key]` rather than a hardcoded number — see *Configurable Location Intrigue Limits* below.
+
+### Configurable Location Intrigue Limits
+
+`LM` (`{City:3,Shrine:2,Hospital:2,School:2}`) remains as the canonical default/fallback constant, but the *active* per-script ceilings live in `G.locMax`, editable via a "Location Intrigue Limits" stepper section on the Setup screen (`adjLocMax(loc,d)`, synced across screens by `syncLocMaxUI()`). Every runtime read of the old `LM[loc]` (board badges, the Day-input WC tracker, card-play intrigue displays, the advice engine's intrigue-build suggestion) now reads `G.locMax[loc]`. Persisted in save slots with a `{...LM,...(s.locMax||{})}` merge so saves made before this feature existed still load with the default ceilings; reset to `{...LM}` on `loadPreloaded`/`confirmVer` (a fresh script starts from the standard 3/2/2/2).
 
 ### Drag and Drop
 - Mouse: HTML5 `ondragstart`/`ondragover`/`ondragleave`/`ondrop`.
@@ -319,13 +362,26 @@ Unchanged — `G.patientUnlocked` (set by Doctor's ♥♥♥ GW ability) is chec
 - The `deck92` card-scan source's groups 03–05 were never identified/used — unknown content, low priority.
 - `deck91` (a fan alt-art card deck found in the uploaded archive) was explicitly deprioritized as cosmetic-only and not pursued.
 
-### Feature ideas discussed / logical next steps (not yet started)
-- **Time Spiral screen** — inter-loop discussion/notes view.
-- **Custom script builder** with the difficulty-estimation formula from the rulebook.
-- **Undo stack** — everything mutates `G` directly; would need snapshotting.
-- **Export/import full mid-game state** (not just setup/script).
-- **Configurable location intrigue maxes** — `LM` is hardcoded `{City:3,Shrine:2,Hospital:2,School:2}`; some scripts may vary.
-- **Scrollable board zones** for small screens with many characters in one zone.
+### Feature ideas discussed / logical next steps
+
+All six items previously listed here were implemented in one session (see the sections below for
+each: *Configurable Location Intrigue Limits*, *Undo Stack*, *Full Game Export/Import*, *Time
+Spiral Screen*, *Script Validation*; the scrollable-board-zones CSS change is covered under
+*Board View Architecture*). One sub-part was deliberately **not** implemented — see below.
+
+- **Difficulty-estimation formula — still not implemented, and should not be guessed at.** The
+  "custom script builder" item originally called for surfacing the Mastermind's Handbook's
+  difficulty-estimation formula (a numeric score computed from a script's plot/role/incident
+  composition) while building a script. No source for that formula was available in this session,
+  and per the *Data Sourcing Discipline* rule below, it was **not** fabricated or approximated —
+  what was implemented instead is `renderScriptValidation()` (see *Script Validation*), which
+  catches structural mistakes but makes no claim about difficulty. If a future session has access
+  to the Mastermind's Handbook (ask the user to re-supply it — see *File Locations*), implement
+  the actual formula there rather than inventing one.
+- Other lower-priority items not revisited this session: a **custom-script builder wizard flow**
+  (multi-step UI instead of the current flat Setup form) and further **UX polish** on the six
+  shipped features (e.g. a folder-picker affordance for local portraits instead of a fixed
+  `portraits/` convention) remain open if wanted.
 
 ---
 
