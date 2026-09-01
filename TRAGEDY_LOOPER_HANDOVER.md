@@ -9,11 +9,11 @@
 
 A single-file HTML/CSS/JavaScript web app (zero dependencies, ~335KB) implementing a near-complete digital Mastermind companion for **Tragedy Looper: New Tragedies (WizKids 2022)**, with full secondary support for the **Z-Man Games (2014)** edition — including its **Cosmic Evil** expansion (Prime Evil / Cosmic Mythology tragedy sets).
 
-Started as a static player aid, and has grown into a fully interactive digital board: drag-and-drop character movement, facedown card play with a proper reveal/resolution phase (matching real tabletop rules), automatic win-condition tracking, a filterable game log, a Final Guess end-game screen, and original character portrait art.
+Started as a static player aid, and has grown into a fully interactive digital board: drag-and-drop character movement, facedown card play with a proper reveal/resolution phase (matching real tabletop rules), automatic win-condition tracking, a filterable game log, a Final Guess end-game screen, original character portrait art, and an optional local-scan portrait override for private builds.
 
 **Output file:** `tragedy-looper-advisor.html`
 **Redirect file:** `index.html` — GitHub Pages root redirect to the app (see *Hosting*, below)
-**Architecture:** All code lives in one self-contained HTML file (4,972 lines). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
+**Architecture:** All code lives in one self-contained HTML file (5,020 lines, ~343KB). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
 
 **Live URL (GitHub Pages):** `https://calsolum.github.io/tragedy-looper-companion/` — confirmed working by the user. Note the repo itself has since been renamed/moved to `Calsolum/tragedy-looper-companion` (GitHub reports this automatically on push to the old `Calsolum/hello-world` remote; `git push` still succeeds via the redirect).
 
@@ -187,9 +187,19 @@ This was changed from an earlier iteration where the portrait was a small 34px t
 
 **Portrait modal** (`#portrait-modal-img`, `openPortraitModal()` / `closePortraitModal()`) — full-size view on click, also sized `width:min(230px, 62vw);aspect-ratio:5/7`.
 
-**Copyright note (important, discussed at length with the user):** the app must **never** embed scans or reproductions of the physical card artwork, official or fan-made — fan art is independently copyrighted by its creator, and official art is Z-Man/WizKids' property. Only original, self-authored SVG artwork may be embedded in the repo/app. Bare facts (character names, roles, dimensions, mechanics) are fine to use; illustrations are not. This constraint was reaffirmed when the user asked about using original card images for a **private, local-only, non-hosted** copy of the app — the answer given was: reproducing copyrighted art is technically still infringement even for private/offline personal use (no blanket personal-use exemption in US copyright law), but enforcement risk for a private local copy is effectively nil, and it's the user's call to make for their own private build. **I (Claude) will not source, download, or embed the actual copyrighted card scans myself, even locally** — but the app can be adapted to read portrait images from a local folder path if the user wants to drop in their own scans themselves. This has been discussed but **not yet implemented** — see *Pending / Next Steps*.
+**Copyright note (important, discussed at length with the user):** the app must **never** embed scans or reproductions of the physical card artwork, official or fan-made — fan art is independently copyrighted by its creator, and official art is Z-Man/WizKids' property. Only original, self-authored SVG artwork may be embedded in the repo/app. Bare facts (character names, roles, dimensions, mechanics) are fine to use; illustrations are not. This constraint was reaffirmed when the user asked about using original card images for a **private, local-only, non-hosted** copy of the app — the answer given was: reproducing copyrighted art is technically still infringement even for private/offline personal use (no blanket personal-use exemption in US copyright law), but enforcement risk for a private local copy is effectively nil, and it's the user's call to make for their own private build. **I (Claude) will not source, download, or embed the actual copyrighted card scans myself, even locally** — but the app has been adapted (see *Local Portrait Override*, below) to read portrait images from a local folder path if the user wants to drop in their own scans themselves.
 
 To add a new **original** portrait: add an entry to `CHAR_PORTRAITS` keyed by the character's exact `name` string, value a base64 SVG data URI. **Known past bug:** a manual edit once left a literal placeholder string (`PLACEHOLDER_TEACHER_B64`) instead of real base64 data — always verify the string decodes to a real image before committing.
+
+### Local Portrait Override (implemented)
+
+The app can optionally load portraits from a local `portraits/` folder placed next to `tragedy-looper-advisor.html`, instead of the built-in SVG art — for a private, offline copy where the user drops in their own scans of the physical cards. This is fully implemented (was previously discussed-but-not-built):
+
+- **`LOCAL_PORTRAITS`** — boolean, persisted in `localStorage` (`tl_local_portraits`). Toggled via the **Portrait Source** card on the Home screen (`toggleLocalPortraits()`), which flips the flag, updates the card's label (`updatePortraitToggleLabel()`, also called from `updateVerLabels()` so it's correct on load/navigation), and re-renders the board/Final Guess screen so the change is visible immediately.
+- **`portraitSrc(charName)`** — when local mode is on, returns `portraits/{charName}.{ext}` (first of `PORTRAIT_EXTS = ['jpg','jpeg','png','webp']`, filename matches the character's exact name, e.g. `portraits/Shrine Maiden.jpg`); otherwise returns the built-in `CHAR_PORTRAITS[charName]` data URI directly.
+- **`portraitOnError(imgEl, charName)`** — wired to every portrait `<img>`'s `onerror`. In local mode, cascades through the remaining extensions in `PORTRAIT_EXTS` one at a time (tracked via `imgEl.dataset.pStage`); once exhausted (or if local mode is off and the built-in URI itself somehow fails), falls back to the built-in `CHAR_PORTRAITS[charName]` art. No local folder is required to exist — a page with local mode on and no `portraits/` folder present falls straight through to the built-in art with no broken images, confirmed via headless browser testing.
+- Wired into all four portrait render sites: the board sidebar image, the hover popup (`showCharPortrait`), the fullscreen modal (`openPortraitModal`), and the Final Guess remaining-characters thumbnail.
+- No settings UI beyond the single Home-screen toggle — there's no folder picker; the convention is fixed (`portraits/` relative to the HTML file, filename = exact character name).
 
 ---
 
@@ -303,7 +313,6 @@ Unchanged — `G.patientUnlocked` (set by Doctor's ♥♥♥ GW ability) is chec
 ## Known Pending / Suggested Next Work
 
 ### Confirmed gaps
-- **Local portrait override** — discussed with the user (see *Copyright note*): wiring `CHAR_PORTRAITS` lookups to optionally read from a local image folder (e.g. `portraits/Patient.jpg`) so the user can drop in their own physical-card scans for a private local build, without touching app code. **Not yet implemented** — offered, not requested yet.
 - **`loadAndEdit`** — loads a preloaded script then navigates to Setup; verify the plot dropdowns visually pre-select the correct plots (flagged as unverified in the prior handover; status since then not re-confirmed).
 - Some `PRELOADED_SCRIPTS_ZM` entries carry a ⚠ "PARTIAL DATA" note for inferred (not source-confirmed) values — worth another verification pass if more source material turns up (rulebook scans, card photos).
 - The `deck92` card-scan source's groups 03–05 were never identified/used — unknown content, low priority.
