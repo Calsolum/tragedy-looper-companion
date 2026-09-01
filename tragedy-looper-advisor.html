@@ -735,6 +735,9 @@ option{background:var(--bg2)}
     <div id="il"></div>
     <button class="ghost" onclick="addI()">+ Add Incident</button>
 
+    <div class="sec">Script Validation</div>
+    <div id="script-validation"></div>
+
     <div class="sec">Save Script</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <button class="btn-outline" onclick="saveToSlot(1)">Save to Slot 1</button>
@@ -2275,6 +2278,7 @@ function adj(k,d){
   G[k]=Math.max(mn,Math.min(mx,(G[k]||1)+d));
   const el=document.getElementById('d-'+k);
   if(el) el.textContent=G[k];
+  if(k==='dL') renderScriptValidation();
 }
 function adjLocMax(loc,d){
   if(!G.locMax) G.locMax={...LM};
@@ -2363,6 +2367,7 @@ function renderPlotLists(){
   renderPlotGroup(all,'main',document.getElementById('main-plot-list'));
   renderPlotGroup(all,'sub',document.getElementById('sub-plot-list'));
   renderDerivedWCs();
+  renderScriptValidation();
 }
 function makePlotEl(p,mode){
   const isSel=mode==='main'?G.mainPlot===p.id:G.subPlots.includes(p.id);
@@ -2709,7 +2714,7 @@ function addC(){
   renderChars();
 }
 function delC(id){G.chars=G.chars.filter(c=>c.id!==id);renderChars();}
-function uc(id,k,v){const c=G.chars.find(c=>c.id===id);if(c)c[k]=v;}
+function uc(id,k,v){const c=G.chars.find(c=>c.id===id);if(c)c[k]=v;renderScriptValidation();}
 function getRoles(){
   const base=['None','Key Person','Key Person (must be a Girl)','Brain','Murderer','Killer','Witch','Serial Killer',
     'Time Traveler','Cultist','Conspiracy Theorist','Factor','Friend','Lover','Loved One','Curmudgeon','Henchman','Person'];
@@ -2758,6 +2763,7 @@ function renderChars(){
       </div>`;
     el.appendChild(d);
   });
+  renderScriptValidation();
 }
 
 function toggleForbidLoc(charId, loc, checked){
@@ -2781,7 +2787,7 @@ function autoForbid(charId){
 // ── INCIDENTS ──
 function addI(){G.incidents.push({id:Date.now(),day:1,type:getIncidents()[0],culprit:'',fired:0});renderIncs();}
 function delI(id){G.incidents=G.incidents.filter(i=>i.id!==id);renderIncs();}
-function ui_fn(id,k,v){const i=G.incidents.find(i=>i.id===id);if(i)i[k]=v;}
+function ui_fn(id,k,v){const i=G.incidents.find(i=>i.id===id);if(i)i[k]=v;renderScriptValidation();}
 function renderIncs(){
   const el=document.getElementById('il');el.innerHTML='';
   G.incidents.forEach(inc=>{
@@ -2808,6 +2814,58 @@ function renderIncs(){
       </div>`;
     el.appendChild(d);
   });
+  renderScriptValidation();
+}
+
+// ── SCRIPT VALIDATION ──
+// Sanity-checks the script being built against data already known to the app (active plots'
+// required roles, character/incident lists, loop length) — not a numeric difficulty score.
+// No rulebook-published difficulty-estimation formula was available to source when this was
+// built (see TRAGEDY_LOOPER_HANDOVER.md), so this deliberately stops at structural validation
+// rather than guessing at one.
+function renderScriptValidation(){
+  const el=document.getElementById('script-validation');
+  if(!el) return;
+  const issues=[], warnings=[];
+  if(!G.mainPlot) issues.push('No Main Plot selected.');
+  if(G.subPlots.length>2) issues.push('More than 2 subplots selected.');
+
+  const activePlots=getActivePlots();
+  const reqRoles=new Set();
+  activePlots.forEach(p=>p.roles.forEach(r=>reqRoles.add(r)));
+  const assignedRoles=G.chars.map(c=>c.role);
+  reqRoles.forEach(r=>{
+    const base=r.replace(' (must be a Girl)','');
+    const covered=assignedRoles.some(ar=>ar===r||ar===base||ar.replace(' (must be a Girl)','')===base);
+    if(!covered) issues.push(`No character assigned the required role "${r}".`);
+  });
+
+  if(G.chars.length<5) warnings.push(`Only ${G.chars.length} character${G.chars.length===1?'':'s'} — most scripts use 5–8.`);
+  const nameCounts={};
+  G.chars.forEach(c=>{ const n=(c.name||'').trim(); if(n) nameCounts[n]=(nameCounts[n]||0)+1; });
+  Object.entries(nameCounts).filter(([,n])=>n>1).forEach(([n])=>issues.push(`Duplicate character name "${n}".`));
+  if(G.chars.some(c=>!(c.name||'').trim())) issues.push('One or more characters have no name.');
+
+  if(!G.incidents.length) warnings.push('No incidents scheduled — most scripts use at least one.');
+  G.incidents.forEach(i=>{
+    if(i.day>G.dL) issues.push(`Incident "${i.type}" is scheduled for Day ${i.day}, past the ${G.dL}-day loop length.`);
+    if(!(i.culprit||'').trim()) warnings.push(`Incident "${i.type}" (Day ${i.day}) has no culprit set.`);
+  });
+
+  if(!issues.length&&!warnings.length){
+    el.innerHTML=`<div class="card" style="border-color:#1a3a22;background:var(--gbg)"><span style="color:var(--grn);font-size:12.5px">✓ No issues found.</span></div>`;
+    return;
+  }
+  let html='';
+  if(issues.length) html+=`<div class="card" style="border-color:#5a1a15;background:var(--rbg);margin-bottom:${warnings.length?'8px':'0'}">
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--red2);margin-bottom:6px;letter-spacing:.05em">ISSUES (${issues.length})</div>
+    ${issues.map(m=>`<div style="font-size:12px;color:var(--t2);margin-bottom:3px">⚠ ${m}</div>`).join('')}
+  </div>`;
+  if(warnings.length) html+=`<div class="card" style="border-color:#4a3010;background:var(--abg)">
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--amb);margin-bottom:6px;letter-spacing:.05em">WARNINGS (${warnings.length})</div>
+    ${warnings.map(m=>`<div style="font-size:12px;color:var(--t2);margin-bottom:3px">• ${m}</div>`).join('')}
+  </div>`;
+  el.innerHTML=html;
 }
 
 // ── DAY SCREEN ──
