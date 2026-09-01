@@ -4825,6 +4825,13 @@ function confirmIncidentFired(incId){
   if(!inc) return;
   inc.fired=(inc.fired||0)+1;
   addLog('effect','⚡',`<b>Incident fires</b>: ${inc.type}`,`Day ${G.cD} — culprit: ${inc.culprit||'?'}`);
+  // Auto-flag any active win condition (e.g. Butterfly Effect) tied to this incident type firing —
+  // previously this had to be separately bumped by hand with the WC's +/- buttons.
+  getDerivedWCs().filter(wc=>wc.type==='incident_fired_type'&&wc.incidentType===inc.type).forEach(wc=>{
+    if(!G.wcProgress[wc.id]) G.wcProgress[wc.id]={val:0};
+    G.wcProgress[wc.id].val=(G.wcProgress[wc.id].val||0)+1;
+    addLog('sys','🎯',`<b>Win condition flagged</b>: ${wc.label}`,`Auto-flagged — triggered by ${inc.type} firing`);
+  });
   openNextDayModal(); // refresh
 }
 

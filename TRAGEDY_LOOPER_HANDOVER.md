@@ -265,6 +265,8 @@ Each zone: `id="lz-{locKey}"`, `data-loc="{locKey}"`.
 
 Unchanged in design: `getDerivedWCs()`, `getWCProgress(wc)`, `getWCAutoStatus(wc)`, `analyseThreats()` (feeds the Advice screen).
 
+**`incident_fired_type` auto-flagging (implemented).** Previously, marking an incident as fired via `confirmIncidentFired(incId)` (the "Mark Fired" button in the Next Day modal) only bumped `inc.fired` — any `incident_fired_type` win condition tied to that incident (e.g. the `butterfly_fired` WC on the "Changing the Future" plot, `desc: "At Loop End, if the Butterfly Effect Incident happened this loop, the Protagonists lose"`) still had to be separately bumped by hand with its own `+`/`−` buttons. `confirmIncidentFired` now also does `getDerivedWCs().filter(wc=>wc.type==='incident_fired_type'&&wc.incidentType===inc.type)` and increments `G.wcProgress[wc.id].val` for every match, logging a distinct `sys`/🎯 game-log entry per flagged WC. This is generic over `incidentType` (not hardcoded to "Butterfly Effect" specifically), so it covers any current or future plot using this WC type. The manual `+`/`−` buttons remain as a correction/override mechanism — auto-flagging just removes the need to also click them for the common case. Verified via the Browser pane: loading Script 5 ("The Assassin from the Future"), marking its Day-2 Butterfly Effect incident fired, and confirming `G.wcProgress.butterfly_fired.val` goes from 0→1, `getWCAutoStatus()` reports "Fired ✓", and the existing Next Day modal logic (unchanged) picks it up and surfaces "Win Condition 1 — MET" automatically.
+
 ---
 
 ## Game Log (`GAME_LOG`)
@@ -323,7 +325,6 @@ Unchanged — `G.patientUnlocked` (set by Doctor's ♥♥♥ GW ability) is chec
 - **Undo stack** — everything mutates `G` directly; would need snapshotting.
 - **Export/import full mid-game state** (not just setup/script).
 - **Configurable location intrigue maxes** — `LM` is hardcoded `{City:3,Shrine:2,Hospital:2,School:2}`; some scripts may vary.
-- **Butterfly Effect auto-flagging** — win-condition check exists via `wcProgress`, but nothing auto-flags when a Butterfly Effect incident actually resolves on board.
 - **Scrollable board zones** for small screens with many characters in one zone.
 
 ---
