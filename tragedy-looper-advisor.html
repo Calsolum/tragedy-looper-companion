@@ -670,6 +670,37 @@ option{background:var(--bg2)}
       </div>
     </div>
 
+    <div class="sec">Location Intrigue Limits</div>
+    <div class="nrow">
+      <div class="nbx">
+        <div class="nlbl">City</div>
+        <button class="nb" onclick="adjLocMax('City',-1)">−</button>
+        <div class="nbig" id="d-locMax-City">3</div>
+        <button class="nb" onclick="adjLocMax('City',1)">+</button>
+      </div>
+      <div class="nbx">
+        <div class="nlbl">Shrine</div>
+        <button class="nb" onclick="adjLocMax('Shrine',-1)">−</button>
+        <div class="nbig" id="d-locMax-Shrine">2</div>
+        <button class="nb" onclick="adjLocMax('Shrine',1)">+</button>
+      </div>
+    </div>
+    <div class="nrow">
+      <div class="nbx">
+        <div class="nlbl">Hospital</div>
+        <button class="nb" onclick="adjLocMax('Hospital',-1)">−</button>
+        <div class="nbig" id="d-locMax-Hospital">2</div>
+        <button class="nb" onclick="adjLocMax('Hospital',1)">+</button>
+      </div>
+      <div class="nbx">
+        <div class="nlbl">School</div>
+        <button class="nb" onclick="adjLocMax('School',-1)">−</button>
+        <div class="nbig" id="d-locMax-School">2</div>
+        <button class="nb" onclick="adjLocMax('School',1)">+</button>
+      </div>
+    </div>
+    <p style="font-size:11.5px;color:var(--t3);margin-bottom:0">Default 3/2/2/2 (City/Shrine/Hospital/School). Most scripts use the defaults — adjust only if your script's card specifies otherwise.</p>
+
     <div class="sec">Main Plot <span style="font-weight:400;color:var(--t3)">(choose 1)</span></div>
     <div id="main-plot-list"></div>
 
@@ -1968,6 +1999,7 @@ const G={
   mainPlot:null,subPlots:[],
   chars:[],incidents:[],
   loc:{City:0,Shrine:0,Hospital:0,School:0},
+  locMax:{City:3,Shrine:2,Hospital:2,School:2},  // per-location intrigue ceiling; configurable per script
   wcProgress:{},
   patientUnlocked:false  // set true when Doctor's ♥♥♥ ability fires this loop
 };
@@ -1988,6 +2020,7 @@ function saveToSlot(n){
     mainPlot:G.mainPlot,subPlots:[...G.subPlots],
     chars:JSON.parse(JSON.stringify(G.chars)),
     incidents:JSON.parse(JSON.stringify(G.incidents)),
+    locMax:{...G.locMax},
     savedAt:new Date().toLocaleString()
   };
   putSlots(slots);
@@ -2006,9 +2039,11 @@ function loadFromSlot(n){
   G.incidents=JSON.parse(JSON.stringify(s.incidents));
   G.scriptName=s.name;
   G.loc={City:0,Shrine:0,Hospital:0,School:0};
+  G.locMax={...LM,...(s.locMax||{})}; // migrate old saves without locMax
   G.wcProgress={};
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
+  syncLocMaxUI();
   go('sd');
   updateVerLabels();
 }
@@ -2039,9 +2074,11 @@ function loadPreloaded(idx){
     culprit:inc.culprit, fired:0
   }));
   G.loc={City:0,Shrine:0,Hospital:0,School:0};
+  G.locMax={...LM};
   G.wcProgress={};
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
+  syncLocMaxUI();
   updateVerLabels();
   // Sync setup UI
   if(document.getElementById('script-name')) document.getElementById('script-name').value=G.scriptName;
@@ -2055,7 +2092,7 @@ function selVer(v){
   document.getElementById('vc-zm').classList.toggle('sel',v==='zm');
 }
 function confirmVer(){
-  G.mainPlot=null; G.subPlots=[]; G.chars=[]; G.incidents=[];
+  G.mainPlot=null; G.subPlots=[]; G.chars=[]; G.incidents=[]; G.locMax={...LM};
   go('sh'); updateVerLabels();
 }
 function updateVerLabels(){
@@ -2092,7 +2129,8 @@ function go(id){
   if(id==='ss'){renderPlotLists();renderChars();renderIncs();
     if(document.getElementById('script-name')) document.getElementById('script-name').value=G.scriptName||'';
     document.getElementById('d-tL').textContent=G.tL;
-    document.getElementById('d-dL').textContent=G.dL;}
+    document.getElementById('d-dL').textContent=G.dL;
+    syncLocMaxUI();}
   if(id==='sd') renderDay();
   if(id==='sb') renderBoard();
   if(id==='sg') renderLog();
@@ -2105,6 +2143,15 @@ function adj(k,d){
   G[k]=Math.max(mn,Math.min(mx,(G[k]||1)+d));
   const el=document.getElementById('d-'+k);
   if(el) el.textContent=G[k];
+}
+function adjLocMax(loc,d){
+  if(!G.locMax) G.locMax={...LM};
+  G.locMax[loc]=Math.max(1,Math.min(9,(G.locMax[loc]??LM[loc])+d));
+  const el=document.getElementById('d-locMax-'+loc);
+  if(el) el.textContent=G.locMax[loc];
+}
+function syncLocMaxUI(){
+  LOCS.forEach(l=>{const el=document.getElementById('d-locMax-'+l); if(el) el.textContent=G.locMax[l];});
 }
 
 // ── SAVED SLOTS ──
@@ -2679,7 +2726,7 @@ function renderDay(){
   const ll=document.getElementById('lil');ll.innerHTML='';
   const lg=document.createElement('div');lg.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
   LOCS.forEach(loc=>{
-    const v=G.loc[loc]||0,m=LM[loc];
+    const v=G.loc[loc]||0,m=G.locMax[loc];
     const pct=Math.min(100,Math.round((v/m)*100));
     const col=v>=m?'var(--red2)':v>=m-1?'var(--amb)':'var(--grn)';
     const d=document.createElement('div');d.className='card';
@@ -2726,7 +2773,7 @@ function renderDay(){
   wt.appendChild(note);
 }
 function adjWC(id,d){if(!G.wcProgress[id])G.wcProgress[id]={val:0};G.wcProgress[id].val=Math.max(0,(G.wcProgress[id].val||0)+d);renderDay();}
-function aL(loc,d){G.loc[loc]=Math.max(0,Math.min(LM[loc]+2,(G.loc[loc]||0)+d));renderDay();}
+function aL(loc,d){G.loc[loc]=Math.max(0,Math.min(G.locMax[loc]+2,(G.loc[loc]||0)+d));renderDay();}
 
 // ── WC CALCULATION ──
 function getWCProgress(wc){
@@ -2859,8 +2906,8 @@ function buildActions(threats){
   if(!actions.length){
     const notKP=G.chars.filter(c=>c.role!=='Key Person'&&c.role!=='Key Person (must be a Girl)'&&!c.dead);
     if(notKP.length) actions.push({card:`${uneaseLabel()} +1 → ${notKP[0].name}`,reason:'No urgent threats. Noise play to misdirect protagonists.',wc:'Misdirection',pri:3,urgency:'low'});
-    const low=LOCS.find(l=>(G.loc[l]||0)<LM[l]-1);
-    if(low) actions.push({card:`Intrigue +1 → ${low}`,reason:`Build toward Intrigue win condition. ${low} at ${G.loc[low]||0}/${LM[low]}.`,wc:'Intrigue build',pri:3,urgency:'low'});
+    const low=LOCS.find(l=>(G.loc[l]||0)<G.locMax[l]-1);
+    if(low) actions.push({card:`Intrigue +1 → ${low}`,reason:`Build toward Intrigue win condition. ${low} at ${G.loc[low]||0}/${G.locMax[low]}.`,wc:'Intrigue build',pri:3,urgency:'low'});
   }
   return actions;
 }
@@ -3006,7 +3053,7 @@ function bToggleDead(charId){
   c.dead=!c.dead; renderBoard();
 }
 function bAdjLoc(loc, delta){
-  G.loc[loc]=Math.max(0,Math.min(LM[loc]+2,(G.loc[loc]||0)+delta));
+  G.loc[loc]=Math.max(0,Math.min(G.locMax[loc]+2,(G.loc[loc]||0)+delta));
   renderBoard();
 }
 
@@ -3154,10 +3201,10 @@ function renderBoard(){
 
   // Location layout: Hospital TL, Shrine TR, City BL, School BR
   const locOrder=[
-    {key:'Hospital',label:'Hospital',maxI:2},
-    {key:'Shrine',  label:'Shrine',  maxI:2},
-    {key:'City',    label:'City',    maxI:3},
-    {key:'School',  label:'School',  maxI:2},
+    {key:'Hospital',label:'Hospital',maxI:G.locMax.Hospital},
+    {key:'Shrine',  label:'Shrine',  maxI:G.locMax.Shrine},
+    {key:'City',    label:'City',    maxI:G.locMax.City},
+    {key:'School',  label:'School',  maxI:G.locMax.School},
   ];
 
   let html='';
@@ -4425,7 +4472,7 @@ function getLocCards(locKey){
 function openLocCardPlayModal(locKey){
   const modal=document.getElementById('card-play-modal');
   document.getElementById('cpm-title').textContent='Play on '+locKey;
-  document.getElementById('cpm-subtitle').textContent=`Location intrigue: ${G.loc[locKey]||0}/${LM[locKey]} · MM: ${DAY_CARDS.mm}/${DAY_LIMIT} · Prot: ${DAY_CARDS.prot}/${DAY_LIMIT} played today`;
+  document.getElementById('cpm-subtitle').textContent=`Location intrigue: ${G.loc[locKey]||0}/${G.locMax[locKey]} · MM: ${DAY_CARDS.mm}/${DAY_LIMIT} · Prot: ${DAY_CARDS.prot}/${DAY_LIMIT} played today`;
   const locCards=getLocCards(locKey);
   let html=`<div class="card-grid">`;
   locCards.forEach(card=>{
@@ -4604,9 +4651,9 @@ function _resolveOnePendingCard(p, cancelledIds){
     addLog(card.tag, card.icon, `<b>${card.label}</b> revealed → ${c.name}`, resultDesc, c.id, c.name);
   } else if(p.targetType==='loc'){
     const locKey=p.targetId;
-    if(card.delta) G.loc[locKey]=Math.max(0,Math.min(LM[locKey]+2,(G.loc[locKey]||0)+card.delta));
+    if(card.delta) G.loc[locKey]=Math.max(0,Math.min(G.locMax[locKey]+2,(G.loc[locKey]||0)+card.delta));
     addLog(card.tag, card.icon, `<b>${card.label}</b> revealed → ${locKey}`,
-      `Location intrigue now ${G.loc[locKey]||0}/${LM[locKey]}`);
+      `Location intrigue now ${G.loc[locKey]||0}/${G.locMax[locKey]}`);
   }
 }
 
