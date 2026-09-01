@@ -620,7 +620,18 @@ option{background:var(--bg2)}
         <div class="hcard-t">Portrait Source</div>
         <div class="hcard-d" id="portrait-toggle-label"></div>
       </div>
+      <div class="hcard" onclick="exportGameState()">
+        <div class="hcard-i">⬇️</div>
+        <div class="hcard-t">Export Full Game</div>
+        <div class="hcard-d">Save current loop/day, board &amp; log to a file</div>
+      </div>
+      <div class="hcard" onclick="document.getElementById('import-state-input').click()">
+        <div class="hcard-i">⬆️</div>
+        <div class="hcard-t">Import Full Game</div>
+        <div class="hcard-d">Restore from an exported file</div>
+      </div>
     </div>
+    <input type="file" id="import-state-input" accept="application/json,.json" style="display:none" onchange="importGameState(this.files[0])"/>
     <div id="active-script-banner" style="display:none" class="card" onclick="go('ss')">
       <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--t3);margin-bottom:4px">ACTIVE SCRIPT</div>
       <div id="active-script-name" style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--t)"></div>
@@ -2100,6 +2111,62 @@ function deleteSlot(n){
   slots[n-1]=null;
   putSlots(slots);
   renderSavedSlots();
+}
+
+// ── FULL GAME EXPORT / IMPORT ──
+// Unlike the 3 save slots (script/setup only — see saveToSlot/loadFromSlot above), this captures
+// the complete mid-game state: current loop/day, board tokens, win-condition progress, the full
+// game log, and the runtime trackers — so an in-progress game can be backed up or moved between
+// devices, not just the script it started from.
+const FULL_SAVE_SCHEMA='tragedy-looper-full-save';
+function exportGameState(){
+  const payload={
+    schema:FULL_SAVE_SCHEMA, schemaVersion:1, exportedAt:new Date().toISOString(),
+    G:JSON.parse(JSON.stringify(G)),
+    gameLog:JSON.parse(JSON.stringify(GAME_LOG)),
+    gwUsed:JSON.parse(JSON.stringify(GW_USED)),
+    cardUsed:JSON.parse(JSON.stringify(CARD_USED)),
+    dayCards:JSON.parse(JSON.stringify(DAY_CARDS)),
+    pendingCards:JSON.parse(JSON.stringify(PENDING_CARDS)),
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const safeName=(G.scriptName||'tragedy-looper-game').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'')||'tragedy-looper-game';
+  const a=document.createElement('a');
+  a.href=url; a.download=`${safeName}_L${G.cL}D${G.cD}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importGameState(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let payload;
+    try{ payload=JSON.parse(reader.result); }
+    catch{ alert('That file is not valid JSON.'); document.getElementById('import-state-input').value=''; return; }
+    if(!payload||payload.schema!==FULL_SAVE_SCHEMA||!payload.G){
+      alert("That file doesn't look like a Tragedy Looper full-game export.");
+      document.getElementById('import-state-input').value='';
+      return;
+    }
+    if(!confirm('Import this saved game? This replaces your current board, log, and progress.')){
+      document.getElementById('import-state-input').value='';
+      return;
+    }
+    Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,payload.G);
+    if(!G.locMax) G.locMax={...LM}; // migrate exports made before locMax existed
+    GAME_LOG.length=0; GAME_LOG.push(...(payload.gameLog||[]));
+    Object.keys(GW_USED).forEach(k=>delete GW_USED[k]); Object.assign(GW_USED,payload.gwUsed||{});
+    Object.keys(CARD_USED).forEach(k=>delete CARD_USED[k]); Object.assign(CARD_USED,payload.cardUsed||{});
+    DAY_CARDS.mm=payload.dayCards?.mm||0; DAY_CARDS.prot=payload.dayCards?.prot||0;
+    PENDING_CARDS.length=0; PENDING_CARDS.push(...(payload.pendingCards||[]));
+    UNDO_STACK.length=0; updateUndoBtn(); // imported state isn't part of the pre-import undo history
+    updateVerLabels();
+    go('sb');
+    document.getElementById('import-state-input').value='';
+    alert('Game imported.');
+  };
+  reader.readAsText(file);
 }
 
 function loadPreloaded(idx){
