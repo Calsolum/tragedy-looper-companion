@@ -13,7 +13,7 @@ Started as a static player aid, and has grown into a fully interactive digital b
 
 **Output file:** `tragedy-looper-advisor.html`
 **Redirect file:** `index.html` — GitHub Pages root redirect to the app (see *Hosting*, below)
-**Architecture:** All code lives in one self-contained HTML file (5,300 lines, ~358KB). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
+**Architecture:** All code lives in one self-contained HTML file (5,469 lines, ~370KB). Two `<script>` blocks share global scope — Block 1 holds game data and core logic, Block 2 holds the game log, card-play/reveal system, board rendering, portrait, and Final Guess systems.
 
 **Live URL (GitHub Pages):** `https://calsolum.github.io/tragedy-looper-companion/` — confirmed working by the user. Note the repo itself has since been renamed/moved to `Calsolum/tragedy-looper-companion` (GitHub reports this automatically on push to the old `Calsolum/hello-world` remote; `git push` still succeeds via the redirect).
 
@@ -254,9 +254,26 @@ New `sts` screen. `renderTimeSpiral()` renders one card per loop (1 through `G.t
 
 ## Script Validation (Setup screen, "custom script builder")
 
-`renderScriptValidation()` renders into `#script-validation` on the Setup screen (`ss`), sanity-checking the script being built purely from data already available to the app — `getActivePlots()`'s role requirements, `G.chars`, `G.incidents`, `G.dL` — **not** a numeric difficulty score (see *Data Sourcing Discipline* below for why that part of the original "custom script builder" idea was intentionally left unbuilt). Checks: no Main Plot selected / >2 subplots; every role required by the active plots has at least one character assigned (handles `"... (must be a Girl)"` role-name variants by comparing base role names too); duplicate or blank character names; an incident scheduled past the loop's day length; and soft warnings (character count outside 5–8, no incidents scheduled, an incident missing its culprit) that don't block saving.
+`renderScriptValidation()` renders into `#script-validation` on the Setup screen (`ss`), sanity-checking the script being built purely from data already available to the app — `getActivePlots()`'s role requirements, `G.chars`, `G.incidents`, `G.dL` — **not** a numeric difficulty score; the numeric formula is a separate feature, see *Difficulty Estimator* below. Checks: no Main Plot selected / >2 subplots; every role required by the active plots has at least one character assigned (handles `"... (must be a Girl)"` role-name variants by comparing base role names too); duplicate or blank character names; an incident scheduled past the loop's day length; and soft warnings (character count outside 5–8, no incidents scheduled, an incident missing its culprit) that don't block saving.
 
 Wired into every function that already mutates the relevant state — `uc()`/`ui_fn()` (character/incident field edits), `renderChars()`/`renderIncs()` (add/delete), `renderPlotLists()` (plot selection), and `adj()` for `dL` changes specifically. `uc`/`ui_fn` don't otherwise touch the character/incident list DOM (`#cl`/`#il`), so calling `renderScriptValidation()` from inside them — which only ever writes to the separate `#script-validation` container — doesn't disturb focus on whatever input the mastermind is mid-edit on.
+
+---
+
+## Difficulty Estimator (Z-Man Basic Tragedy Set)
+
+Implements the Z-Man Games (2014) *Mastermind's Handbook*'s script-creation difficulty formula, sourced directly from a PDF of the handbook the user supplied (a Steam Workshop Tabletop Simulator mod's bundled PDF — not stored in this repo; see *File Locations*). Chapter "SCRIPT CREATION GUIDE," step 6 "DECIDE NUMBER OF LOOPS" (pages 29–39). Quoted directly: *"Below here, you can find a point list, that if added up, will give you a rough idea on how many loops might be needed... This doesn't give you a bulletproof-balanced script, but it will give you an idea at least."* **Basic Tragedy Set only** — the handbook gives no equivalent formula for First Steps, and the whole chapter is Z-Man-edition-specific (New Tragedies isn't covered).
+
+**Sourcing note on plot naming:** the formula's plot names ("Murder Plan," "Change of Future," "Threads of Fate," "A Hidden Freak," "Unknown Factor X") don't match `PLOTS_ZM`'s primary rulebook-adapted entries — they match the `_zm`-suffixed "Card Deck Variant" entries exactly (see *Key Data Constants*, above, on why those variants exist as separate entries). Before mapping formula values onto both naming variants, this was verified rather than assumed: e.g. `lp` ("Lurking Psychopath") and `hf_zm` ("The Hidden Freak") have identical `roles` (`['Friend','Serial Killer']`) and identical `desc` in the existing `PLOTS_ZM` data, confirming they're the same underlying plot under two different English translations.
+
+- **`DIFFICULTY_MAIN_PLOTS_BT` / `DIFFICULTY_SUBPLOTS_BT`** — the printed point values, keyed to both naming-variant plot ids (e.g. `mp_bt_zm` and `pm_bt` both map to `1.8` for Murder Plan/Premeditated Murder).
+- **`DIFFICULTY_GIRLS_PLOTS`** (`swm_zm`/`swm`, Sign with Me!'s +0.4-per-girl bonus) and **`DIFFICULTY_BUTTERFLY_PLOTS`** (`ctf_zm`/`ctf`, Change of Future's +0.5-per-Butterfly-Effect-Incident bonus) — main plots with a per-unit bonus on top of their base score.
+- **`calcDifficultyEstimate()`** auto-computes everything derivable from existing structured data: main plot base + per-plot bonuses, subplot totals, the incident-count modifier (<4 Incidents −0.4, >4 Incidents +0.4) and Hospital-Incident-scheduled modifier (+0.4), and the day-count modifier. **The day-count modifier is printed as −0.6 for ≤6 days and −0.2 for ≥7 days — both negative.** This is reported exactly as printed even though it sits in tension with the handbook's own prose two paragraphs earlier ("having fewer days decreases the difficulty, and more days increase it") — both a layout-preserving and a plain-text extraction of the PDF agree byte-for-byte on `-0.2`, so rather than "correcting" it to `+0.2` to match the prose (which would be exactly the kind of inference the *Data Sourcing Discipline* rule forbids), it's implemented as printed. If a future session gets independent confirmation this is a publisher typo, fix the sign then, not before.
+- The girl-character count (`G.difficultyGirls`) is a **manual number input** — the app has no character gender field to auto-derive it from, and character *names* alone ("Girl Student" vs. e.g. "Class Rep") aren't a reliable general signal across all 28 characters.
+- The handbook's remaining ~21 bullets — 10 difficulty-raising roles, 4 difficulty-lowering roles (`DIFFICULTY_ROLE_CHECKLIST`, each `{dir, label}`), 7 difficulty-raising incidents (`DIFFICULTY_INCIDENT_CHECKLIST`) — are qualitative judgment calls (e.g. "the Boss connects to the board") not reliably auto-detectable from the data model, so they're rendered as a manual checklist (±0.2 each per `G.difficultyRoleChecks[i]` / `G.difficultyIncidentChecks[i]`) rather than guessed-at detection heuristics.
+- **`renderDifficultyEstimate()`** renders into `#difficulty-estimate` (wrapped in `#difficulty-estimate-wrap`, hidden via `display:none` when `calcDifficultyEstimate()` returns `null` — i.e. NT edition, First Steps, or no main plot yet). Shows the running total color-coded green/amber/red, each contributing line item, and the girl-count field / checklists. The girl-count input uses `onchange` (not `oninput`) so a full-panel re-render doesn't disturb focus mid-keystroke — same reasoning as the checklists' checkboxes, which don't touch each other's DOM state either.
+- Wired into `renderPlotLists()` (plot selection), `ui_fn()`/`renderIncs()` (incident edits — incident count, Butterfly Effect count, and Hospital Incident presence all depend on `G.incidents`), and `adj()` for `dL` changes. `G.chars` isn't a dependency (no auto-detected role/gender logic), so `renderChars()`/`uc()` don't need to trigger it.
+- Persisted in `G` (`difficultyGirls`, `difficultyRoleChecks`, `difficultyIncidentChecks`), included in save slots (`saveToSlot`/`loadFromSlot`) and full export/import (automatic, since that serializes all of `G`), with migration fallbacks for old saves/exports and a reset to defaults on `loadPreloaded`/`confirmVer` — same pattern as `locMax`/`loopNotes`.
 
 ---
 
@@ -364,24 +381,23 @@ Unchanged — `G.patientUnlocked` (set by Doctor's ♥♥♥ GW ability) is chec
 
 ### Feature ideas discussed / logical next steps
 
-All six items previously listed here were implemented in one session (see the sections below for
-each: *Configurable Location Intrigue Limits*, *Undo Stack*, *Full Game Export/Import*, *Time
-Spiral Screen*, *Script Validation*; the scrollable-board-zones CSS change is covered under
-*Board View Architecture*). One sub-part was deliberately **not** implemented — see below.
+All seven items previously listed here were implemented (across two sessions — see the sections
+below for each: *Configurable Location Intrigue Limits*, *Undo Stack*, *Full Game Export/Import*,
+*Time Spiral Screen*, *Script Validation*, *Difficulty Estimator*; the scrollable-board-zones CSS
+change is covered under *Board View Architecture*).
 
-- **Difficulty-estimation formula — still not implemented, and should not be guessed at.** The
-  "custom script builder" item originally called for surfacing the Mastermind's Handbook's
-  difficulty-estimation formula (a numeric score computed from a script's plot/role/incident
-  composition) while building a script. No source for that formula was available in this session,
-  and per the *Data Sourcing Discipline* rule below, it was **not** fabricated or approximated —
-  what was implemented instead is `renderScriptValidation()` (see *Script Validation*), which
-  catches structural mistakes but makes no claim about difficulty. If a future session has access
-  to the Mastermind's Handbook (ask the user to re-supply it — see *File Locations*), implement
-  the actual formula there rather than inventing one.
-- Other lower-priority items not revisited this session: a **custom-script builder wizard flow**
-  (multi-step UI instead of the current flat Setup form) and further **UX polish** on the six
-  shipped features (e.g. a folder-picker affordance for local portraits instead of a fixed
-  `portraits/` convention) remain open if wanted.
+The difficulty-estimation formula was initially left unbuilt in the first of those two sessions —
+no source was available, and per the *Data Sourcing Discipline* rule below it was not fabricated.
+The user then supplied the actual Z-Man Games (2014) Mastermind's Handbook PDF later in the same
+overall engagement, and the formula was implemented from it exactly as printed — see *Difficulty
+Estimator*, below, for the full sourcing detail (page citation, exact quote, and a note on one
+value that's printed in apparent tension with the handbook's own prose, reported as-is rather than
+"corrected" to match expectation).
+
+Lower-priority items not revisited: a **custom-script builder wizard flow** (multi-step UI instead
+of the current flat Setup form) and further **UX polish** on the shipped features (e.g. a
+folder-picker affordance for local portraits instead of a fixed `portraits/` convention) remain
+open if wanted.
 
 ---
 
@@ -438,3 +454,5 @@ A hard rule was established and followed throughout this project: **never fabric
 | Project readme | `README.md` (repo root) |
 
 Primary sources used during development (official rulebook PDFs, a scanned physical card archive) were supplied as uploads in earlier chat sessions and are not stored in this repository. If deeper rules verification is needed again, ask the user to re-supply the relevant PDFs/scans rather than assuming their prior contents from memory.
+
+**Z-Man *Mastermind's Handbook* PDF (used to source the Difficulty Estimator — see above):** found on the user's local machine at `E:\OneDrive\Documents\My Games\Tabletop Simulator\Mods\PDF\httpssteamusercontentaakamaihdnetugc247424040452157843705A29CEC0BAE52F944E936C1885E0569A2BA78B4.pdf` (a Steam Workshop Tabletop Simulator mod's bundled PDF; the filename is a mangled Steam CDN URL, not descriptive). Not copied into this repo — it's the user's local file, not project-owned content, and per the *Portrait System* copyright note this project has an established practice of not bundling rulebook/card scans into the repo even when they're a primary source. If this path stops existing or the file is unavailable, ask the user to locate it again rather than assuming its contents from this document. `pdftotext` (from poppler-utils, available via `/mingw64/bin/pdftotext` on this dev machine even though `pdftoppm` — needed for the Read tool's page-image rendering — is not) is the reliable way to extract its text for searching; both `-layout` and plain extraction were cross-checked to agree before treating any of its numbers as trustworthy.
