@@ -727,6 +727,11 @@ option{background:var(--bg2)}
     <div class="sec">Derived Win Conditions</div>
     <div id="wc-derived"></div>
 
+    <div id="difficulty-estimate-wrap" style="display:none">
+      <div class="sec">Difficulty Estimate <span style="font-weight:400;color:var(--t3)">(Z-Man Basic Tragedy Set)</span></div>
+      <div id="difficulty-estimate"></div>
+    </div>
+
     <div class="sec">Characters</div>
     <div id="cl"></div>
     <button class="ghost" onclick="addC()">+ Add Character</button>
@@ -1186,6 +1191,66 @@ const PLOTS_ZM = [
    roles:['Paranoiac'],
    wcs:[],
    desc:'(Cosmic Evil — Cosmic Mythology) On script creation, an "extra" main plot is chosen alongside the Paranoiac. If the Extra Gauge is 2+ at loop start, the original main plot is deprecated and the extra main plot activates instead for that loop (track the Extra Gauge manually).'},
+];
+
+// ══════════════════════════════════════════════════════════════
+// DIFFICULTY ESTIMATOR — Z-Man Mastermind's Handbook, "Script Creation
+// Guide" → step 6 "Decide Number of Loops" (Basic Tragedy Set only; the
+// handbook gives no equivalent formula for First Steps). Quoted directly:
+// "Below here, you can find a point list, that if added up, will give you
+// a rough idea on how many loops might be needed... This doesn't give you
+// a bulletproof-balanced script, but it will give you an idea at least."
+// Keyed by plot id — covers both the "Card Deck Variant" (_zm-suffixed)
+// and rulebook-adapted PLOTS_ZM entries, confirmed to be the same
+// underlying plots under different translations (e.g. hf_zm "The Hidden
+// Freak" and lp "Lurking Psychopath" share identical roles/desc).
+// ══════════════════════════════════════════════════════════════
+const DIFFICULTY_MAIN_PLOTS_BT={
+  mp_bt_zm:1.8, pm_bt:1.8,   // Murder Plan / Premeditated Murder
+  tsi_zm:1.5,   tsi:1.5,     // The Sealed Item
+  swm_zm:1.0,   swm:1.0,     // Sign with Me! (+0.4 per girl in the game — see DIFFICULTY_GIRLS_PLOTS)
+  ctf_zm:1.3,   ctf:1.3,     // Change of Future / Changing the Future (+0.5 per Butterfly Effect Incident)
+  gtb_zm:1.0,   gtb:1.0,     // Giant Time Bomb
+};
+const DIFFICULTY_GIRLS_PLOTS=['swm_zm','swm']; // main plots where the rulebook adds +0.4 per girl character
+const DIFFICULTY_BUTTERFLY_PLOTS=['ctf_zm','ctf']; // main plots where +0.5 per Butterfly Effect Incident applies
+const DIFFICULTY_SUBPLOTS_BT={
+  cof_zm:1.0,   cof:1.0,     // Circle of Friends
+  ala_zm:1.0,   ala:1.0,     // A Love Affair
+  hf_zm:0.8,    lp:0.8,      // The Hidden Freak / Lurking Psychopath
+  aur_bt_zm:0.5,aur_bt:0.5,  // An Unsettling Rumour
+  pv_zm:0,      pv:0,        // Paranoia Virus
+  tof_zm:0.5,   tof:0.5,     // Threads of Fate / Thread of Fate
+  uf_zm:0.8,    uf:0.8,      // Unknown Factor X / Unknown Factor
+};
+// The rulebook's remaining ±0.2 bullets are qualitative judgment calls (e.g. "connects to
+// the board") that aren't reliably auto-detectable from the app's data model — presented as
+// a manual checklist rather than guessed-at heuristics. dir:1 = raises difficulty (+0.2),
+// dir:-1 = lowers it (-0.2).
+const DIFFICULTY_ROLE_CHECKLIST=[
+  {dir:1, label:'A girl is the Key Person'},
+  {dir:1, label:'A girl is the Killer or the Loved One'},
+  {dir:1, label:'Goodwill Refusal on the Shrine Maiden or Doctor'},
+  {dir:1, label:'Mandatory Goodwill Refusal on the Nurse'},
+  {dir:1, label:'Godly Being or the Patient is the Witch'},
+  {dir:1, label:'Police Officer or the Patient is the Time Traveler'},
+  {dir:1, label:'The Patient is a Friend'},
+  {dir:1, label:"An Incident's culprit is the Conspiracy Theorist"},
+  {dir:1, label:'Mystery Boy has a role that exists in only 1 plot'},
+  {dir:1, label:'The Boss connects to the board (Conspiracy Theorist, Serial Killer)'},
+  {dir:-1, label:'Office Worker is anything other than a Person'},
+  {dir:-1, label:'Shrine Maiden, Pop Idol, or Boss is the Time Traveler'},
+  {dir:-1, label:'Godly Being is directly connected to the loss conditions'},
+  {dir:-1, label:'A character with a forbidden area connects to the board'},
+];
+const DIFFICULTY_INCIDENT_CHECKLIST=[
+  "An Incident is triggered by the Rich Man's Daughter or the Henchman",
+  'An Incident is triggered by the Lover or the Loved One',
+  'You intend to trigger Hospital Incident',
+  'Faraway Murder is used, with a Key Person or Friend in the script',
+  'Suicide is used, with the Key Person, Friend, or Factor as culprit',
+  'Foul Evil is used, with The Sealed Item as the main plot',
+  'Spreading is used, while the Doctor has Goodwill Refusal',
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -2033,7 +2098,10 @@ const G={
   locMax:{City:3,Shrine:2,Hospital:2,School:2},  // per-location intrigue ceiling; configurable per script
   wcProgress:{},
   patientUnlocked:false,  // set true when Doctor's ♥♥♥ ability fires this loop
-  loopNotes:{}  // loop number → free-text notes carried forward as Protagonist "memory" (Time Spiral screen)
+  loopNotes:{},  // loop number → free-text notes carried forward as Protagonist "memory" (Time Spiral screen)
+  difficultyGirls:0,           // manual count of girl characters, for the Sign with Me! difficulty bonus
+  difficultyRoleChecks:[],     // booleans aligned to DIFFICULTY_ROLE_CHECKLIST
+  difficultyIncidentChecks:[]  // booleans aligned to DIFFICULTY_INCIDENT_CHECKLIST
 };
 
 // ── UNDO STACK ──
@@ -2098,6 +2166,9 @@ function saveToSlot(n){
     chars:JSON.parse(JSON.stringify(G.chars)),
     incidents:JSON.parse(JSON.stringify(G.incidents)),
     locMax:{...G.locMax},
+    difficultyGirls:G.difficultyGirls||0,
+    difficultyRoleChecks:[...(G.difficultyRoleChecks||[])],
+    difficultyIncidentChecks:[...(G.difficultyIncidentChecks||[])],
     savedAt:new Date().toLocaleString()
   };
   putSlots(slots);
@@ -2119,6 +2190,9 @@ function loadFromSlot(n){
   G.locMax={...LM,...(s.locMax||{})}; // migrate old saves without locMax
   G.wcProgress={};
   G.loopNotes={};
+  G.difficultyGirls=s.difficultyGirls||0;
+  G.difficultyRoleChecks=s.difficultyRoleChecks?[...s.difficultyRoleChecks]:[];
+  G.difficultyIncidentChecks=s.difficultyIncidentChecks?[...s.difficultyIncidentChecks]:[];
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
   syncLocMaxUI();
@@ -2177,6 +2251,9 @@ function importGameState(file){
     Object.keys(G).forEach(k=>delete G[k]); Object.assign(G,payload.G);
     if(!G.locMax) G.locMax={...LM}; // migrate exports made before locMax existed
     if(!G.loopNotes) G.loopNotes={}; // migrate exports made before the Time Spiral notes existed
+    if(!G.difficultyRoleChecks) G.difficultyRoleChecks=[]; // migrate exports made before the difficulty estimator existed
+    if(!G.difficultyIncidentChecks) G.difficultyIncidentChecks=[];
+    if(!G.difficultyGirls) G.difficultyGirls=0;
     GAME_LOG.length=0; GAME_LOG.push(...(payload.gameLog||[]));
     Object.keys(GW_USED).forEach(k=>delete GW_USED[k]); Object.assign(GW_USED,payload.gwUsed||{});
     Object.keys(CARD_USED).forEach(k=>delete CARD_USED[k]); Object.assign(CARD_USED,payload.cardUsed||{});
@@ -2212,6 +2289,7 @@ function loadPreloaded(idx){
   G.locMax={...LM};
   G.wcProgress={};
   G.loopNotes={};
+  G.difficultyGirls=0; G.difficultyRoleChecks=[]; G.difficultyIncidentChecks=[];
   document.getElementById('d-tL').textContent=G.tL;
   document.getElementById('d-dL').textContent=G.dL;
   syncLocMaxUI();
@@ -2229,6 +2307,7 @@ function selVer(v){
 }
 function confirmVer(){
   G.mainPlot=null; G.subPlots=[]; G.chars=[]; G.incidents=[]; G.locMax={...LM}; G.loopNotes={};
+  G.difficultyGirls=0; G.difficultyRoleChecks=[]; G.difficultyIncidentChecks=[];
   go('sh'); updateVerLabels();
 }
 function updateVerLabels(){
@@ -2280,7 +2359,7 @@ function adj(k,d){
   G[k]=Math.max(mn,Math.min(mx,(G[k]||1)+d));
   const el=document.getElementById('d-'+k);
   if(el) el.textContent=G[k];
-  if(k==='dL') renderScriptValidation();
+  if(k==='dL'){ renderScriptValidation(); renderDifficultyEstimate(); }
 }
 function adjLocMax(loc,d){
   if(!G.locMax) G.locMax={...LM};
@@ -2370,6 +2449,7 @@ function renderPlotLists(){
   renderPlotGroup(all,'sub',document.getElementById('sub-plot-list'));
   renderDerivedWCs();
   renderScriptValidation();
+  renderDifficultyEstimate();
 }
 function makePlotEl(p,mode){
   const isSel=mode==='main'?G.mainPlot===p.id:G.subPlots.includes(p.id);
@@ -2789,7 +2869,7 @@ function autoForbid(charId){
 // ── INCIDENTS ──
 function addI(){G.incidents.push({id:Date.now(),day:1,type:getIncidents()[0],culprit:'',fired:0});renderIncs();}
 function delI(id){G.incidents=G.incidents.filter(i=>i.id!==id);renderIncs();}
-function ui_fn(id,k,v){const i=G.incidents.find(i=>i.id===id);if(i)i[k]=v;renderScriptValidation();}
+function ui_fn(id,k,v){const i=G.incidents.find(i=>i.id===id);if(i)i[k]=v;renderScriptValidation();renderDifficultyEstimate();}
 function renderIncs(){
   const el=document.getElementById('il');el.innerHTML='';
   G.incidents.forEach(inc=>{
@@ -2817,6 +2897,7 @@ function renderIncs(){
     el.appendChild(d);
   });
   renderScriptValidation();
+  renderDifficultyEstimate();
 }
 
 // ── SCRIPT VALIDATION ──
@@ -2869,6 +2950,92 @@ function renderScriptValidation(){
   </div>`;
   el.innerHTML=html;
 }
+
+// ── DIFFICULTY ESTIMATOR (Z-Man Basic Tragedy Set) ──
+// See DIFFICULTY_MAIN_PLOTS_BT etc. above for the sourced point values.
+function calcDifficultyEstimate(){
+  if(G.version!=='zm') return null;
+  const mainPlot=getActivePlots().find(p=>p.type==='main');
+  if(!mainPlot||mainPlot.set!=='bt'||!(mainPlot.id in DIFFICULTY_MAIN_PLOTS_BT)) return null;
+
+  let total=0; const parts=[];
+  const mainScore=DIFFICULTY_MAIN_PLOTS_BT[mainPlot.id];
+  total+=mainScore; parts.push(`${mainPlot.name}: +${mainScore.toFixed(1)}`);
+
+  if(DIFFICULTY_GIRLS_PLOTS.includes(mainPlot.id)&&(G.difficultyGirls||0)>0){
+    const n=G.difficultyGirls, bonus=0.4*n;
+    total+=bonus; parts.push(`${n} girl${n===1?'':'s'} in the game: +${bonus.toFixed(1)}`);
+  }
+  if(DIFFICULTY_BUTTERFLY_PLOTS.includes(mainPlot.id)){
+    const n=G.incidents.filter(i=>i.type==='Butterfly Effect').length;
+    if(n>0){ const bonus=0.5*n; total+=bonus; parts.push(`${n} Butterfly Effect Incident${n===1?'':'s'}: +${bonus.toFixed(1)}`); }
+  }
+  getActivePlots().filter(p=>p.type==='sub').forEach(p=>{
+    const score=DIFFICULTY_SUBPLOTS_BT[p.id];
+    if(score!=null){ total+=score; parts.push(`${p.name}: ${score>=0?'+':''}${score.toFixed(1)}`); }
+  });
+
+  const incCount=G.incidents.length;
+  if(incCount<4){ total-=0.4; parts.push('Fewer than 4 Incidents: −0.4'); }
+  else if(incCount>4){ total+=0.4; parts.push('More than 4 Incidents: +0.4'); }
+  if(G.incidents.some(i=>i.type==='Hospital Incident')){ total+=0.4; parts.push('Hospital Incident scheduled: +0.4'); }
+
+  if(G.dL<=6){ total-=0.6; parts.push('6 days or less per loop: −0.6'); }
+  else { total-=0.2; parts.push('7 days or more per loop: −0.2'); }
+
+  (G.difficultyRoleChecks||[]).forEach((checked,i)=>{
+    if(checked){ const item=DIFFICULTY_ROLE_CHECKLIST[i]; const d=0.2*item.dir; total+=d; parts.push(`${item.label}: ${d>=0?'+':''}${d.toFixed(1)}`); }
+  });
+  (G.difficultyIncidentChecks||[]).forEach((checked,i)=>{
+    if(checked){ total+=0.2; parts.push(`${DIFFICULTY_INCIDENT_CHECKLIST[i]}: +0.2`); }
+  });
+
+  return {total, parts, mainPlot};
+}
+function renderDifficultyEstimate(){
+  const wrap=document.getElementById('difficulty-estimate-wrap');
+  const el=document.getElementById('difficulty-estimate');
+  if(!wrap||!el) return;
+  const result=calcDifficultyEstimate();
+  if(!result){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  const {total,parts,mainPlot}=result;
+  const showGirls=DIFFICULTY_GIRLS_PLOTS.includes(mainPlot.id);
+
+  let html=`<p style="font-size:11.5px;color:var(--t3);margin:0 0 10px">From the Z-Man Mastermind's Handbook script-creation point list (Basic Tragedy Set only — the handbook gives no equivalent for First Steps). Typical scripts run 3–4 loops; the handbook doesn't give an exact points-to-loops conversion, so treat a higher total as leaning toward more loops rather than a precise count. <span style="font-style:italic">"This doesn't give you a bulletproof-balanced script, but it will give you an idea at least."</span></p>`;
+
+  if(showGirls) html+=`<div class="col" style="margin-bottom:10px"><span class="lbl">Girl characters in this script <span style="font-weight:400;color:var(--t3)">(Sign with Me! bonus: +0.4 each)</span></span>
+    <input type="number" min="0" max="20" value="${G.difficultyGirls||0}" onchange="setDifficultyGirls(+this.value)"/></div>`;
+
+  html+=`<div class="card" style="margin-bottom:10px">
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--t3);letter-spacing:.05em;margin-bottom:6px">AUTO-CALCULATED FROM THIS SCRIPT</div>
+    ${parts.map(p=>`<div style="font-size:12px;color:var(--t2);margin-bottom:2px">${p}</div>`).join('')}
+  </div>`;
+
+  html+=`<div class="sec" style="margin-top:0">Difficulty Checklist — Roles</div>`;
+  html+=DIFFICULTY_ROLE_CHECKLIST.map((item,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);cursor:pointer;padding:4px 0">
+      <input type="checkbox" ${G.difficultyRoleChecks[i]?'checked':''} style="width:auto" onchange="toggleDifficultyRoleCheck(${i},this.checked)"/>
+      ${item.label} <span style="color:${item.dir>0?'var(--red2)':'var(--grn)'};font-size:10.5px">(${item.dir>0?'+0.2':'−0.2'})</span>
+    </label>`).join('');
+
+  html+=`<div class="sec">Difficulty Checklist — Incidents</div>`;
+  html+=DIFFICULTY_INCIDENT_CHECKLIST.map((label,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);cursor:pointer;padding:4px 0">
+      <input type="checkbox" ${G.difficultyIncidentChecks[i]?'checked':''} style="width:auto" onchange="toggleDifficultyIncidentCheck(${i},this.checked)"/>
+      ${label} <span style="color:var(--red2);font-size:10.5px">(+0.2)</span>
+    </label>`).join('');
+
+  const col=total>=4?'var(--red2)':total>=2.5?'var(--amb)':'var(--grn)';
+  html+=`<div class="card" style="margin-top:10px;text-align:center;border-color:${col}">
+    <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--t3);letter-spacing:.08em;margin-bottom:4px">ESTIMATED SCORE</div>
+    <div style="font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:${col}">${total.toFixed(1)}</div>
+    <div style="font-size:11px;color:var(--t3);margin-top:2px">Typical scripts run 3–4 loops</div>
+  </div>`;
+
+  el.innerHTML=html;
+}
+function setDifficultyGirls(val){ G.difficultyGirls=Math.max(0,val||0); renderDifficultyEstimate(); }
+function toggleDifficultyRoleCheck(idx,checked){ if(!G.difficultyRoleChecks) G.difficultyRoleChecks=[]; G.difficultyRoleChecks[idx]=checked; renderDifficultyEstimate(); }
+function toggleDifficultyIncidentCheck(idx,checked){ if(!G.difficultyIncidentChecks) G.difficultyIncidentChecks=[]; G.difficultyIncidentChecks[idx]=checked; renderDifficultyEstimate(); }
 
 // ── DAY SCREEN ──
 function renderDay(){
